@@ -11,6 +11,7 @@ import {
   keyFor,
   completionPercent,
   touchStudy,
+  issueCertificate,
 } from '../app/progress.ts';
 import { levels } from '../app/journey.ts';
 const prepare = (s, n) => ({
@@ -61,6 +62,24 @@ test('Study streak advances once per consecutive calendar day', () => {
   s = touchStudy(s, '2026-09-09');
   assert.equal(s.streakDays, 1);
 });
+test('Certificate is issued only after the full course with a valid identity and unique id', () => {
+  let s = initialState;
+  assert.equal(
+    issueCertificate(s, 'Luca Bianchi', '2026-09-05', 'PAI-2026-A1B2C3D4')
+      .certificateId,
+    '',
+  );
+  for (let n = 0; n < 6; n++) s = complete(prepare(s, n), n);
+  assert.equal(issueCertificate(s, 'Lu', '2026-09-05', 'PAI-2026-A1B2C3D4').certificateId, '');
+  const issued = issueCertificate(
+    s,
+    '  Luca   Bianchi ',
+    '2026-09-05',
+    'PAI-2026-A1B2C3D4',
+  );
+  assert.equal(issued.profileName, 'Luca Bianchi');
+  assert.equal(issued.certificateId, 'PAI-2026-A1B2C3D4');
+});
 test('Saved progress sanitizes malformed fields and preserves completed rewards after note edits', () => {
   const s = complete(prepare(initialState, 0), 0);
   s.notes[0] = '';
@@ -96,7 +115,8 @@ test('All six levels have complete slides, balanced A/B exercises and matching f
       assert.equal(q.options.length, 2);
       assert.ok(q.correct === 0 || q.correct === 1);
       assert.ok(q.why.length > 40 && q.hint.length > 15);
-      q.correct === 0 ? a++ : b++;
+      if (q.correct === 0) a++;
+      else b++;
     }
   }
   assert.ok(a >= 7 && b >= 7);

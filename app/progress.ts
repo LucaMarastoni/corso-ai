@@ -8,6 +8,9 @@ export type LearningState = {
   checks: Record<string, number[]>;
   streakDays: number;
   lastStudyDate: string;
+  profileName: string;
+  certificateId: string;
+  completionDate: string;
 };
 export const initialState: LearningState = {
   level: 0,
@@ -19,6 +22,9 @@ export const initialState: LearningState = {
   checks: {},
   streakDays: 0,
   lastStudyDate: '',
+  profileName: '',
+  certificateId: '',
+  completionDate: '',
 };
 export const keyFor = (level: number, item: number) => `${level}:${item}`;
 export function score(s: LearningState) {
@@ -65,6 +71,22 @@ export function complete(s: LearningState, n: number) {
     return s;
   return { ...s, completed: [...new Set([...s.completed, n])] };
 }
+export function issueCertificate(
+  s: LearningState,
+  profileName: string,
+  completionDate: string,
+  certificateId: string,
+) {
+  const name = profileName.trim().replace(/\s+/g, ' ').slice(0, 80);
+  if (
+    s.completed.length !== 6 ||
+    name.length < 3 ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(completionDate) ||
+    !/^PAI-\d{4}-[A-Z0-9]{8}$/.test(certificateId)
+  )
+    return s;
+  return { ...s, profileName: name, completionDate, certificateId };
+}
 export function restore(raw: string): LearningState {
   const x = JSON.parse(raw);
   if (!x || typeof x !== 'object') return { ...initialState };
@@ -105,6 +127,20 @@ export function restore(raw: string): LearningState {
       typeof x.lastStudyDate === 'string' &&
       /^\d{4}-\d{2}-\d{2}$/.test(x.lastStudyDate)
         ? x.lastStudyDate
+        : '',
+    profileName:
+      typeof x.profileName === 'string'
+        ? x.profileName.trim().replace(/\s+/g, ' ').slice(0, 80)
+        : '',
+    certificateId:
+      typeof x.certificateId === 'string' &&
+      /^PAI-\d{4}-[A-Z0-9]{8}$/.test(x.certificateId)
+        ? x.certificateId
+        : '',
+    completionDate:
+      typeof x.completionDate === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(x.completionDate)
+        ? x.completionDate
         : '',
   };
   for (let n = 0; n < 6; n++) {

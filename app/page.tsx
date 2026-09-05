@@ -1,9 +1,17 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { CSSProperties } from 'react';
+import NextImage from 'next/image';
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   ArrowLeft,
   ArrowRight,
@@ -14,7 +22,6 @@ import {
   Play,
   Square,
   Star,
-  Trophy,
   BookOpen,
   Lightbulb,
   Flag,
@@ -25,10 +32,10 @@ import {
   Target,
   Clock3,
   Layers3,
-  ShieldCheck,
-  Zap,
+  Share2,
 } from 'lucide-react';
 import { levels } from './journey';
+import { achievements, type Achievement } from './achievements';
 import {
   initialState,
   score,
@@ -41,6 +48,7 @@ import {
   type LearningState,
   completionPercent,
   touchStudy,
+  issueCertificate,
 } from './progress';
 const STORE = 'ai-course-journey-v2';
 const levelOutcomes = [
@@ -51,6 +59,56 @@ const levelOutcomes = [
   'Lavora con esempi realistici senza esporre informazioni sensibili.',
   'Consegna un kit di contenuti completo, coerente e controllato.',
 ];
+
+function loadCanvasImage(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new window.Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = src;
+  });
+}
+
+function writeWrapped(
+  context: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number,
+) {
+  const words = text.split(' ');
+  const lines: string[] = [];
+  let line = '';
+  for (const word of words) {
+    const candidate = line ? `${line} ${word}` : word;
+    if (context.measureText(candidate).width > maxWidth && line) {
+      lines.push(line);
+      line = word;
+    } else line = candidate;
+  }
+  if (line) lines.push(line);
+  lines.forEach((value, index) => context.fillText(value, x, y + index * lineHeight));
+  return y + lines.length * lineHeight;
+}
+
+function canvasBlob(canvas: HTMLCanvasElement) {
+  return new Promise<Blob>((resolve, reject) =>
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error('Immagine non disponibile'))),
+      'image/png',
+    ),
+  );
+}
+
+function saveBlob(blob: Blob, name: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = name;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 export default function Home() {
   const [state, setState] = useState<LearningState>(initialState),
     [ready, setReady] = useState(false),
@@ -59,7 +117,12 @@ export default function Home() {
     [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null),
     [hint, setHint] = useState(false),
     [solution, setSolution] = useState(false),
-    [celebrate, setCelebrate] = useState(false);
+    [celebrate, setCelebrate] = useState(false),
+    [selectedAchievement, setSelectedAchievement] =
+      useState<Achievement | null>(null),
+    [showCertificate, setShowCertificate] = useState(false),
+    [showFinale, setShowFinale] = useState(false),
+    [shareStatus, setShareStatus] = useState('');
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]),
     [voice, setVoice] = useState(''),
     [audioState, setAudioState] = useState<'idle' | 'playing' | 'paused'>(
@@ -292,38 +355,199 @@ export default function Home() {
     a.click();
     setTimeout(() => URL.revokeObjectURL(u), 1000);
   }
+  function setProfileName(value: string) {
+    setState((current) => ({ ...current, profileName: value.slice(0, 80) }));
+  }
+  function issueCompletedCertificate(current: LearningState) {
+    const date = new Date().toLocaleDateString('en-CA');
+    const certificateId =
+      current.certificateId ||
+      `PAI-${new Date().getFullYear()}-${crypto.randomUUID().replaceAll('-', '').slice(0, 8).toUpperCase()}`;
+    return issueCertificate(
+      current,
+      current.profileName,
+      current.completionDate || date,
+      certificateId,
+    );
+  }
+  function completeCurrentLevel() {
+    if (l < 5) {
+      setState((current) => complete(current, l));
+      setCelebrate(true);
+      return;
+    }
+    if (state.profileName.trim().length < 3) return;
+    setState((current) => issueCompletedCertificate(complete(current, l)));
+    setCelebrate(true);
+    setShowFinale(true);
+  }
+  async function createSocialCard(item: Achievement) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1200;
+    canvas.height = 1500;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Canvas non disponibile');
+    const gradient = context.createLinearGradient(0, 0, 1200, 1500);
+    gradient.addColorStop(0, '#0e1d39');
+    gradient.addColorStop(1, '#18346a');
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, 1200, 1500);
+    context.strokeStyle = 'rgba(255,255,255,.08)';
+    context.lineWidth = 2;
+    for (let i = 0; i < 6; i++) {
+      context.beginPath();
+      context.arc(1020, 210, 110 + i * 58, 0, Math.PI * 2);
+      context.stroke();
+    }
+    context.fillStyle = '#89a7ff';
+    context.font = '700 27px Inter, sans-serif';
+    context.letterSpacing = '5px';
+    context.fillText('PRIMO PASSO · COLLECTIBLE', 80, 105);
+    const image = await loadCanvasImage(item.image);
+    context.drawImage(image, 300, 160, 600, 600);
+    context.textAlign = 'center';
+    context.fillStyle = '#e9b55b';
+    context.font = '700 24px Inter, sans-serif';
+    context.fillText(item.rarity.toUpperCase(), 600, 810);
+    context.fillStyle = '#ffffff';
+    context.font = '800 66px Inter, sans-serif';
+    context.fillText(item.name, 600, 895);
+    context.fillStyle = '#bfcce5';
+    context.font = '400 30px Inter, sans-serif';
+    const resultEnd = writeWrapped(context, item.result, 600, 958, 920, 43);
+    context.strokeStyle = 'rgba(255,255,255,.18)';
+    context.beginPath();
+    context.moveTo(120, resultEnd + 35);
+    context.lineTo(1080, resultEnd + 35);
+    context.stroke();
+    context.fillStyle = '#91a3c3';
+    context.font = '700 22px Inter, sans-serif';
+    context.fillText('CONQUISTATO DA', 600, resultEnd + 105);
+    context.fillStyle = '#ffffff';
+    context.font = '700 42px Inter, sans-serif';
+    context.fillText(state.profileName.trim(), 600, resultEnd + 160);
+    context.fillStyle = '#91a3c3';
+    context.font = '400 25px Inter, sans-serif';
+    context.fillText('Basi di Intelligenza Artificiale', 600, resultEnd + 220);
+    context.textAlign = 'left';
+    context.fillStyle = '#ffffff';
+    context.font = '800 31px Inter, sans-serif';
+    context.fillText('ai. primo passo', 80, 1405);
+    context.textAlign = 'right';
+    context.fillStyle = '#91a3c3';
+    context.font = '500 22px Inter, sans-serif';
+    context.fillText('LA SCUOLA DEL FARE', 1120, 1405);
+    return canvasBlob(canvas);
+  }
+  async function shareAchievement(item: Achievement) {
+    if (state.profileName.trim().length < 3) return;
+    setShareStatus('Creo la card…');
+    try {
+      const blob = await createSocialCard(item);
+      const file = new File([blob], `${item.id}-${state.profileName.trim().replaceAll(' ', '-')}.png`, {
+        type: 'image/png',
+      });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({
+            title: `${item.name} · Primo Passo`,
+            text: `Ho conquistato ${item.name} nel corso Basi di Intelligenza Artificiale.`,
+            files: [file],
+          });
+          setShareStatus('Card condivisa.');
+        } catch (error) {
+          if ((error as Error).name === 'AbortError') {
+            setShareStatus('Condivisione annullata.');
+            return;
+          }
+          saveBlob(blob, file.name);
+          setShareStatus('Condivisione non disponibile: la card è stata scaricata.');
+        }
+      } else {
+        saveBlob(blob, file.name);
+        setShareStatus('Card scaricata: ora puoi pubblicarla sul tuo profilo.');
+      }
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError')
+        setShareStatus('Non sono riuscito a creare la card. Riprova.');
+    }
+  }
+  async function downloadCertificate() {
+    if (!state.certificateId || state.profileName.trim().length < 3) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = 1800;
+    canvas.height = 1270;
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    context.fillStyle = '#f8f5ed';
+    context.fillRect(0, 0, 1800, 1270);
+    context.strokeStyle = '#17305d';
+    context.lineWidth = 12;
+    context.strokeRect(38, 38, 1724, 1194);
+    context.strokeStyle = '#c59a4a';
+    context.lineWidth = 2;
+    context.strokeRect(58, 58, 1684, 1154);
+    context.fillStyle = '#17305d';
+    context.font = '800 42px Inter, sans-serif';
+    context.fillText('ai. primo passo', 115, 145);
+    context.textAlign = 'right';
+    context.fillStyle = '#7b6847';
+    context.font = '700 22px Inter, sans-serif';
+    context.fillText('CERTIFICATO DI PARTECIPAZIONE', 1685, 145);
+    const image = await loadCanvasImage('/achievements/applied-intelligence.png');
+    context.drawImage(image, 720, 155, 360, 360);
+    context.textAlign = 'center';
+    context.fillStyle = '#8d7444';
+    context.font = '700 22px Inter, sans-serif';
+    context.fillText('SI ATTESTA CHE', 900, 555);
+    context.fillStyle = '#14294f';
+    context.font = '800 68px Inter, sans-serif';
+    context.fillText(state.profileName.trim(), 900, 650);
+    context.strokeStyle = '#d6c7aa';
+    context.beginPath();
+    context.moveTo(390, 685);
+    context.lineTo(1410, 685);
+    context.stroke();
+    context.fillStyle = '#52627d';
+    context.font = '400 30px Inter, sans-serif';
+    context.fillText('ha completato il corso online di 60 minuti', 900, 755);
+    context.fillStyle = '#14294f';
+    context.font = '800 47px Inter, sans-serif';
+    context.fillText('Basi di Intelligenza Artificiale', 900, 825);
+    context.fillStyle = '#52627d';
+    context.font = '400 27px Inter, sans-serif';
+    const date = new Intl.DateTimeFormat('it-IT', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).format(new Date(`${state.completionDate}T12:00:00`));
+    context.fillText(`Completato il ${date} · 6 moduli · 42 attività · 600 XP`, 900, 885);
+    context.textAlign = 'left';
+    context.fillStyle = '#7b6847';
+    context.font = '700 20px Inter, sans-serif';
+    context.fillText('ENTE FORMATORE', 115, 1055);
+    context.fillStyle = '#14294f';
+    context.font = '700 27px Inter, sans-serif';
+    context.fillText('Primo Passo · La scuola del fare', 115, 1095);
+    context.textAlign = 'right';
+    context.fillStyle = '#7b6847';
+    context.font = '700 20px Inter, sans-serif';
+    context.fillText('IDENTIFICATIVO UNIVOCO', 1685, 1055);
+    context.fillStyle = '#14294f';
+    context.font = '700 27px ui-monospace, monospace';
+    context.fillText(state.certificateId, 1685, 1095);
+    context.textAlign = 'center';
+    context.fillStyle = '#8c9199';
+    context.font = '400 17px Inter, sans-serif';
+    context.fillText('Attestato di partecipazione al percorso; non costituisce una qualifica professionale accreditata.', 900, 1180);
+    saveBlob(await canvasBlob(canvas), `certificato-${state.certificateId}.png`);
+  }
   const unlocked = unlock(state);
   const completion = completionPercent(state);
   const activityDone =
     state.seen.length + state.solved.length + state.completed.length;
-  const achievements = [
-    {
-      name: 'Primo segnale',
-      detail: 'Risolvi la prima sfida',
-      earned: state.solved.length >= 1,
-      icon: Zap,
-    },
-    {
-      name: 'Metodo in azione',
-      detail: 'Completa il primo livello',
-      earned: state.completed.length >= 1,
-      icon: Target,
-    },
-    {
-      name: 'Occhio critico',
-      detail: 'Risolvi 9 confronti',
-      earned: state.solved.length >= 9,
-      icon: ShieldCheck,
-    },
-    {
-      name: 'Percorso completo',
-      detail: 'Conquista tutti i livelli',
-      earned: finished,
-      icon: Trophy,
-    },
-  ];
-  const earnedCount = achievements.filter((item) => item.earned).length;
-  const nextMilestone = achievements.find((item) => !item.earned);
+  const earnedCount = achievements.filter((item) => item.earned(state)).length;
+  const nextMilestone = achievements.find((item) => !item.earned(state));
   return (
     <>
       <header className="topbar">
@@ -350,6 +574,16 @@ export default function Home() {
           <span>Dispensa</span>
         </a>
       </header>
+      <div className="mobile-progress" aria-label="Avanzamento rapido">
+        <div>
+          <strong>{completion}%</strong>
+          <span>Modulo {l + 1} di 6</span>
+        </div>
+        <Progress value={completion} aria-label="Completamento del corso" />
+        <button onClick={() => heading.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>
+          Continua
+        </button>
+      </div>
       <div className="course-shell">
         <section className="course-card" aria-labelledby="course-title">
           <div className="course-card-main">
@@ -369,7 +603,7 @@ export default function Home() {
                   <Layers3 size={16} /> 6 moduli
                 </span>
                 <span>
-                  <Award size={16} /> {earnedCount}/4 badge
+                  <Award size={16} /> {earnedCount}/6 collectible
                 </span>
               </div>
             </div>
@@ -661,6 +895,20 @@ export default function Home() {
                     <span>◷ 4 minuti indicativi</span>
                     <span>Quaderno personale · nessuna AI collegata</span>
                   </div>
+                  {l === 5 && !state.completed.includes(5) && (
+                    <div className="identity-field">
+                      <label htmlFor="profile-name">Nome e cognome sul certificato</label>
+                      <input
+                        id="profile-name"
+                        value={state.profileName}
+                        maxLength={80}
+                        autoComplete="name"
+                        onChange={(event) => setProfileName(event.target.value)}
+                        placeholder="Es. Luca Bianchi"
+                      />
+                      <small>Controlla l’ortografia: questo nome apparirà anche sulle card social.</small>
+                    </div>
+                  )}
                   <label className="field-label" htmlFor="work">
                     Il tuo lavoro
                   </label>
@@ -728,7 +976,12 @@ export default function Home() {
                   )}
                   {celebrate && (
                     <div className="celebration" role="status">
-                      <Trophy size={36} />
+                      <NextImage
+                        src={finished ? '/achievements/applied-intelligence.png' : '/achievements/signal-frame.png'}
+                        alt=""
+                        width={100}
+                        height={100}
+                      />
                       <h3>
                         {finished
                           ? 'Missione compiuta!'
@@ -773,11 +1026,11 @@ export default function Home() {
               ) : !state.completed.includes(l) ? (
                 <button
                   className="primary"
-                  disabled={!canFinish(state, l)}
-                  onClick={() => {
-                    setState((s) => complete(s, l));
-                    setCelebrate(true);
-                  }}
+                  disabled={
+                    !canFinish(state, l) ||
+                    (l === 5 && state.profileName.trim().length < 3)
+                  }
+                  onClick={completeCurrentLevel}
                 >
                   <Flag size={18} /> Completa il livello
                 </button>
@@ -787,9 +1040,10 @@ export default function Home() {
                   <ArrowRight size={18} />
                 </button>
               ) : (
-                <span className="end-label">
-                  <Trophy size={19} /> Percorso completato
-                </span>
+                <button className="primary" onClick={() => setShowFinale(true)}>
+                  Vedi il traguardo
+                  <ArrowRight size={18} />
+                </button>
               )}
             </footer>
             <nav className="step-nav" aria-label="Attività del livello">
@@ -868,7 +1122,7 @@ export default function Home() {
                   {nextMilestone?.name || 'Tutti i traguardi raggiunti'}
                 </strong>
                 <small>
-                  {nextMilestone?.detail ||
+                  {nextMilestone?.criterion ||
                     'Hai completato il percorso professionale.'}
                 </small>
               </div>
@@ -882,23 +1136,39 @@ export default function Home() {
                   <span className="eyebrow">ACHIEVEMENT</span>
                   <h3 id="achievement-title">Competenze sbloccate</h3>
                 </div>
-                <strong>{earnedCount}/4</strong>
+                <strong>{earnedCount}/6</strong>
               </div>
               <div className="badge-grid">
-                {achievements.map(({ name, detail, earned, icon: Icon }) => (
-                  <div
-                    className={`badge-item ${earned ? 'earned' : ''}`}
-                    key={name}
-                    title={detail}
+                {achievements.map((item) => (
+                  <button
+                    className={`badge-item ${item.earned(state) ? 'earned' : ''}`}
+                    key={item.id}
+                    onClick={() => {
+                      setShareStatus('');
+                      setSelectedAchievement(item);
+                    }}
+                    aria-label={`${item.name}, ${item.earned(state) ? 'sbloccato' : 'bloccato'}`}
                   >
-                    <span>
-                      <Icon size={18} />
+                    <span className="badge-art">
+                      <NextImage src={item.image} alt="" width={84} height={84} />
                     </span>
-                    <small>{name}</small>
-                  </div>
+                    <small>{item.name}</small>
+                    <em>{item.rarity}</em>
+                  </button>
                 ))}
               </div>
             </section>
+            {finished && state.certificateId && (
+              <button className="certificate-shortcut" onClick={() => setShowCertificate(true)}>
+                <NextImage src="/achievements/applied-intelligence.png" alt="" width={66} height={66} />
+                <span>
+                  <small>CERTIFICATO DISPONIBILE</small>
+                  <strong>{state.profileName}</strong>
+                  <em>{state.certificateId}</em>
+                </span>
+                <ArrowRight size={18} />
+              </button>
+            )}
             <div className="streak-card">
               <Flame size={21} />
               <div>
@@ -932,11 +1202,174 @@ export default function Home() {
         <footer className="site-footer">
           <span>Primo passo · Basi di AI</span>
           <span>
-            60 minuti stimati, inclusa la pratica · Nessuna certificazione
-            professionale
+            60 minuti stimati, inclusa la pratica · Attestato di partecipazione
           </span>
         </footer>
       </div>
+      <Dialog
+        open={!!selectedAchievement}
+        onOpenChange={(open) => !open && setSelectedAchievement(null)}
+      >
+        <DialogContent className="collectible-dialog">
+          {selectedAchievement && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{selectedAchievement.name}</DialogTitle>
+                <DialogDescription>
+                  {selectedAchievement.earned(state)
+                    ? 'Collectible conquistato. Personalizza la card e condividi il risultato.'
+                    : 'Questo collectible è ancora da conquistare.'}
+                </DialogDescription>
+              </DialogHeader>
+              <div className={`collectible-preview rarity-${selectedAchievement.rarity.toLowerCase()}`}>
+                <span className="preview-brand">PRIMO PASSO · COLLECTIBLE</span>
+                <NextImage
+                  src={selectedAchievement.image}
+                  alt={`Trofeo ${selectedAchievement.name}`}
+                  width={220}
+                  height={220}
+                />
+                <span className="rarity-label">{selectedAchievement.rarity}</span>
+                <h3>{selectedAchievement.name}</h3>
+                <p>{selectedAchievement.result}</p>
+                <div>
+                  <small>CONQUISTATO DA</small>
+                  <strong>{state.profileName.trim() || 'Il tuo nome'}</strong>
+                  <span>Basi di Intelligenza Artificiale</span>
+                </div>
+              </div>
+              <div className="collectible-copy">
+                <p>{selectedAchievement.description}</p>
+                <strong>Criterio di sblocco</strong>
+                <span>{selectedAchievement.criterion}</span>
+              </div>
+              {selectedAchievement.earned(state) && (
+                <>
+                  <label className="dialog-name-field" htmlFor="share-name">
+                    Nome sulla card
+                    <input
+                      id="share-name"
+                      value={state.profileName}
+                      maxLength={80}
+                      autoComplete="name"
+                      onChange={(event) => setProfileName(event.target.value)}
+                      placeholder="Nome e cognome"
+                    />
+                  </label>
+                  <button
+                    className="primary wide-action"
+                    disabled={state.profileName.trim().length < 3}
+                    onClick={() => shareAchievement(selectedAchievement)}
+                  >
+                    <Share2 size={18} /> Condividi o scarica la card
+                  </button>
+                  <p className="share-status" role="status">{shareStatus}</p>
+                </>
+              )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+      <Dialog open={showFinale} onOpenChange={setShowFinale}>
+        <DialogContent className="finale-dialog">
+          <DialogHeader>
+            <DialogTitle>Il percorso è completo.</DialogTitle>
+            <DialogDescription>
+              Hai trasformato sei moduli di teoria e pratica in un metodo che puoi usare nel lavoro.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="finale-stage">
+            <span className="finale-percent">100%</span>
+            <NextImage
+              src="/achievements/applied-intelligence.png"
+              alt="Trofeo Applied Intelligence"
+              width={250}
+              height={250}
+            />
+            <span className="rarity-label">Leggendario</span>
+            <h3>Applied Intelligence</h3>
+            <p>42 attività completate · 600 XP conquistati</p>
+          </div>
+          {!state.certificateId && (
+            <div className="finale-identity">
+              <label htmlFor="finale-name">Nome e cognome sul certificato</label>
+              <input
+                id="finale-name"
+                value={state.profileName}
+                maxLength={80}
+                autoComplete="name"
+                onChange={(event) => setProfileName(event.target.value)}
+                placeholder="Es. Luca Bianchi"
+              />
+              <button
+                className="primary wide-action"
+                disabled={state.profileName.trim().length < 3}
+                onClick={() => {
+                  setState((current) => issueCompletedCertificate(current));
+                  setShowFinale(false);
+                  setShowCertificate(true);
+                }}
+              >
+                Genera il certificato <ArrowRight size={18} />
+              </button>
+            </div>
+          )}
+          <div className="finale-actions">
+            {state.certificateId && (
+              <button
+                className="primary"
+                onClick={() => {
+                  setShowFinale(false);
+                  setShowCertificate(true);
+                }}
+              >
+                Presenta il certificato <ArrowRight size={18} />
+              </button>
+            )}
+            <button
+              className="quiet"
+              onClick={() => {
+                setShowFinale(false);
+                setSelectedAchievement(achievements[5]);
+              }}
+            >
+              Guarda il collectible
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={showCertificate} onOpenChange={setShowCertificate}>
+        <DialogContent className="certificate-dialog">
+          <DialogHeader>
+            <DialogTitle>Certificato di partecipazione</DialogTitle>
+            <DialogDescription>
+              Il file ad alta risoluzione è pronto per il tuo portfolio o profilo LinkedIn.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="certificate-preview">
+            <div className="certificate-head">
+              <strong>ai. primo passo</strong>
+              <span>CERTIFICATO DI PARTECIPAZIONE</span>
+            </div>
+            <NextImage src="/achievements/applied-intelligence.png" alt="" width={105} height={105} />
+            <small>SI ATTESTA CHE</small>
+            <h3>{state.profileName}</h3>
+            <p>ha completato il corso online</p>
+            <h4>Basi di Intelligenza Artificiale</h4>
+            <p>60 minuti · 6 moduli · 42 attività · 600 XP</p>
+            <div className="certificate-foot">
+              <span>Primo Passo · La scuola del fare</span>
+              <code>{state.certificateId}</code>
+            </div>
+          </div>
+          <button className="primary wide-action" onClick={downloadCertificate}>
+            <Download size={18} /> Scarica il certificato PNG
+          </button>
+          <p className="certificate-note">
+            Attestato di partecipazione al percorso; non costituisce una qualifica professionale accreditata.
+          </p>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

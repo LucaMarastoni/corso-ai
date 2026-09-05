@@ -8,6 +8,9 @@ export const metadata: Metadata = {
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="it">
+      <head>
+        <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+      </head>
       <body>{children}</body>
     </html>
   );

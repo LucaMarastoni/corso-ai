@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { CSSProperties } from 'react';
-import NextImage from 'next/image';
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -976,7 +975,7 @@ export default function Home() {
                   )}
                   {celebrate && (
                     <div className="celebration" role="status">
-                      <NextImage
+                      <img
                         src={finished ? '/achievements/applied-intelligence.png' : '/achievements/signal-frame.png'}
                         alt=""
                         width={100}
@@ -1150,7 +1149,7 @@ export default function Home() {
                     aria-label={`${item.name}, ${item.earned(state) ? 'sbloccato' : 'bloccato'}`}
                   >
                     <span className="badge-art">
-                      <NextImage src={item.image} alt="" width={84} height={84} />
+                      <img src={item.image} alt="" width={84} height={84} />
                     </span>
                     <small>{item.name}</small>
                     <em>{item.rarity}</em>
@@ -1160,7 +1159,7 @@ export default function Home() {
             </section>
             {finished && state.certificateId && (
               <button className="certificate-shortcut" onClick={() => setShowCertificate(true)}>
-                <NextImage src="/achievements/applied-intelligence.png" alt="" width={66} height={66} />
+                <img src="/achievements/applied-intelligence.png" alt="" width={66} height={66} />
                 <span>
                   <small>CERTIFICATO DISPONIBILE</small>
                   <strong>{state.profileName}</strong>
@@ -1223,7 +1222,7 @@ export default function Home() {
               </DialogHeader>
               <div className={`collectible-preview rarity-${selectedAchievement.rarity.toLowerCase()}`}>
                 <span className="preview-brand">PRIMO PASSO · COLLECTIBLE</span>
-                <NextImage
+                <img
                   src={selectedAchievement.image}
                   alt={`Trofeo ${selectedAchievement.name}`}
                   width={220}
@@ -1280,7 +1279,7 @@ export default function Home() {
           </DialogHeader>
           <div className="finale-stage">
             <span className="finale-percent">100%</span>
-            <NextImage
+            <img
               src="/achievements/applied-intelligence.png"
               alt="Trofeo Applied Intelligence"
               width={250}
@@ -1351,7 +1350,7 @@ export default function Home() {
               <strong>ai. primo passo</strong>
               <span>CERTIFICATO DI PARTECIPAZIONE</span>
             </div>
-            <NextImage src="/achievements/applied-intelligence.png" alt="" width={105} height={105} />
+            <img src="/achievements/applied-intelligence.png" alt="" width={105} height={105} />
             <small>SI ATTESTA CHE</small>
             <h3>{state.profileName}</h3>
             <p>ha completato il corso online</p>

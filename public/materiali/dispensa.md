@@ -1,285 +1,489 @@
-# Basi di intelligenza artificiale
+# Basi di AI — Missione 60 minuti
 
-Corso autonomo di 60 minuti stimati. Edizione pilota. Nessun video o docente richiesto.
+Sei livelli da circa 10 minuti: 3 minuti di slide e ripasso, 3 minuti di confronti e feedback, 4 minuti di laboratorio. Tempi indicativi, non un’ora di audio.
 
-Obiettivi: scrivere una richiesta chiara, revisionare un output, controllare i fatti e produrre un piccolo kit di contenuti.
+Punteggio: 20 punti per sfida risolta, 40 per laboratorio. Massimo 600. Nessuna penalità per gli errori. Le attività sono predisposte, non collegate a un modello AI.
 
-Durata: 18 minuti di lettura e ripasso, 35 di esercizi, 7 di quiz. La durata effettiva varia in base al ritmo personale.
+## Livello 1 — Primo contatto
 
-## Capire l’AI — 8 minuti
+Scopri che cosa puoi chiedere a un’AI.
 
-Alla fine saprai distinguere una bozza utile da una risposta che richiede verifica.
+### AI: partiamo dalle parole
 
-### Prima di cominciare
+AI significa intelligenza artificiale. È un nome che raccoglie diversi tipi di sistemi informatici.
 
-Questo percorso è per chi parte da zero. Servono un browser, un posto dove prendere appunti e circa un’ora. Non devi saper programmare. I tempi sono indicativi: fermati sugli esercizi e torna indietro quando serve.
+Qui useremo l’AI generativa: produce contenuti, per esempio un testo, a partire da una richiesta.
 
-Puoi svolgere tutto usando gli esempi inclusi, senza account esterni. Se hai già accesso a un assistente AI testuale, puoi provarvi i prompt: apri una nuova conversazione, incolla il testo della richiesta, invialo e leggi la risposta. Le funzioni e le condizioni dipendono dal servizio scelto. Qui non è integrato un assistente AI.
+Puoi chiederle una bozza, una spiegazione o delle idee. Sei tu a decidere se il risultato è utile.
 
-Il risultato finale sarà un piccolo kit di contenuti per un’attività inventata: una descrizione, tre domande frequenti e un invito al contatto. Imparerai a prepararlo e a controllarlo.
+Tu dai la direzione. L’AI propone.
 
-### Che cosa significa “generativa”
+### Una conversazione, tre passaggi
 
-Intelligenza artificiale è un nome ampio per sistemi che svolgono compiti come riconoscere schemi, classificare informazioni o generare contenuti. In questo corso ci concentriamo sull’AI generativa testuale: sistemi che producono testo a partire da una richiesta.
+1. Scrivi una richiesta. Il messaggio che invii si chiama prompt.
 
-Un modello linguistico ha appreso regolarità da molti esempi durante l’addestramento. Quando risponde, genera una sequenza di frammenti di testo, chiamati token, in base al contesto disponibile. Questa descrizione è semplificata, ma spiega un punto essenziale: un testo convincente non è automaticamente vero.
+2. Leggi la risposta. È un risultato da esaminare, non una garanzia di verità.
 
-Un assistente può aiutarti a riscrivere, riassumere, confrontare alternative e preparare bozze. Può anche fraintendere una consegna, omettere un dettaglio o produrre informazioni inventate. La qualità della scrittura e l’accuratezza dei fatti sono due cose diverse.
+3. Chiedi una modifica. Puoi dire che cosa tenere e che cosa migliorare.
 
-### Una bozza è un punto di partenza
+Richiesta → risposta → revisione
 
-Se fornisci un elenco di servizi e chiedi di riscriverlo in modo chiaro, hai un riferimento con cui confrontare la risposta. Se chiedi prezzi aggiornati di un concorrente senza fornire fonti, la risposta richiede un controllo esterno. L’accesso a strumenti di ricerca non va dato per scontato.
+### Una bella risposta può sbagliare
 
-Tratta l’AI come un collaboratore a cui dare un compito delimitato: tu scegli l’obiettivo, fornisci il materiale e decidi se il risultato è utilizzabile.
+Il sistema ha appreso regolarità da molti esempi e genera testo in base al contesto.
 
-### Esercizio
+Può costruire una frase credibile anche quando un fatto è sbagliato o manca un’informazione.
 
-Dedica 1 minuto a leggere questi compiti e 3 a motivare la scelta: A) rendere più chiaro un testo fornito; B) sapere con certezza il prezzo attuale di un prodotto senza fonti; C) generare cinque titoli per una pagina. Quali sono buoni punti di partenza? Quale richiede informazioni verificate?
+Inizia da compiti che puoi controllare: riscrivere un messaggio, organizzare un elenco, proporre titoli.
 
-### Soluzione e criteri
+Chiaro e convincente non significa verificato.
 
-A e C sono buoni punti di partenza: puoi confrontare la riscrittura con l’originale e valutare i titoli. Anche questi output vanno controllati. B richiede una fonte aggiornata, come il listino ufficiale: la sicurezza del tono non basta. Se hai scelto B come risposta garantita, rileggi “Una bozza è un punto di partenza”.
+### Confronto 1
 
-## Scrivere una richiesta utile — 12 minuti
+Vuoi partire da un compito facile da controllare. Quale prompt scegli?
 
-Saprai scrivere un prompt con obiettivo, contesto, vincoli e formato.
+A. Dimmi con certezza quanto costa oggi ogni bici in vendita nella mia città.
 
-### Il prompt è la tua consegna
+B. Riscrivi più chiaramente questo messaggio: «Vorrei fissare un appuntamento per la bici».
 
-Un prompt è il messaggio con cui chiedi qualcosa all’AI. Non è una formula magica: è una consegna. “Scrivi un testo bello” lascia aperte molte decisioni. “Scrivi una descrizione di 60 parole per chi cerca una riparazione di biciclette” rende il risultato più valutabile.
+Soluzione: B. B fornisce il testo da trasformare: puoi confrontare prima e dopo. A chiede molti dati aggiornati senza fornire fonti; una risposta non sarebbe una garanzia.
 
-Usa quattro ingredienti: obiettivo (che cosa deve fare), contesto (per chi e con quali informazioni), vincoli (cosa rispettare o evitare), formato (come presentare il risultato). Non devono esserci sempre tutti: per una richiesta semplice bastano poche parole. Aggiungili quando riducono un’ambiguità concreta.
+### Confronto 2
 
-### Il nostro caso: Officina Pedale
+Vuoi capire una parola nuova, senza conoscenze tecniche.
 
-Officina Pedale è un’attività completamente inventata. Questi sono i soli fatti disponibili: ripara biciclette urbane, offre manutenzione dei freni e sostituzione delle camere d’aria, riceve su appuntamento tramite modulo di contatto. Non conosciamo indirizzo, prezzi, tempi di lavorazione, certificazioni o orari.
+A. Spiega “prompt” a un principiante e fai un esempio di una richiesta quotidiana.
 
-I dati mancanti non devono diventare promesse. Possiamo chiedere all’AI di segnalarli o ometterli. Nei prompt useremo solo questo caso fittizio. Non servono dati di clienti reali.
+B. Spiega “prompt” usando termini specialistici, senza esempi o definizioni.
 
-Obiettivo: scrivi una descrizione per la pagina iniziale di Officina Pedale.
-Contesto: il pubblico sono persone che usano la bici in città. Fatti disponibili: riparazione bici urbane, manutenzione freni, sostituzione camere d’aria; appuntamenti tramite modulo.
-Vincoli: tono semplice e concreto, massimo 60 parole. Non aggiungere prezzi, orari, indirizzi, garanzie o tempi. Se manca un dato, segnalalo separatamente.
-Formato: un titolo di massimo 8 parole, un paragrafo e un elenco dei dati mancanti.
+Soluzione: A. A adatta la spiegazione al tuo livello. B potrebbe servire a un esperto, ma non al principiante descritto nella consegna.
 
-### Dare materiale da usare
+### Confronto 3
 
-Se chiedi un riassunto, incolla il testo da riassumere e separalo dalle istruzioni con un’etichetta, per esempio “TESTO DA RIASSUMERE”. Se vuoi un certo stile, fornisci un breve esempio e chiarisci che deve servire come modello di tono, non come fonte di nuovi fatti.
+Vuoi ottenere idee da valutare, senza promesse impossibili.
 
-Assegnare un ruolo, come “agisci da copywriter”, può orientare il tono, ma non sostituisce fatti e criteri. La frase “sei un esperto” non rende la risposta verificata.
+A. Dammi il titolo che farà sicuramente comprare il mio prodotto a tutti.
 
-### Esercizio
+B. Proponi tre titoli per una pagina di riparazione bici; li confronterò prima di sceglierne uno.
 
-Primi 2 minuti: individua cosa manca in “Fammi una presentazione della mia officina”. Nei successivi 3 minuti riscrivila con i quattro ingredienti, usando i fatti di Officina Pedale. Negli ultimi 3 prova il prompt nel tuo assistente, se disponibile, oppure confrontalo con la soluzione. Indica quali informazioni hai deciso di non inventare.
+Soluzione: B. B chiede alternative da valutare. A pretende un risultato commerciale che il titolo da solo non può garantire.
 
-### Soluzione e criteri
+### Laboratorio
 
-Una possibile consegna: “Scrivi una presentazione di Officina Pedale per ciclisti urbani. Usa solo questi fatti: riparazione bici urbane, manutenzione freni, sostituzione camere d’aria, appuntamento tramite modulo. Tono chiaro, massimo 60 parole. Non aggiungere informazioni. Restituisci titolo e paragrafo; separa i dati mancanti”.
+Prenditi 4 minuti. Immagina un’attività quotidiana in cui vorresti aiuto: riscrivere un messaggio, capire una parola o mettere in ordine delle idee. Scrivi una richiesta e spiega come controlleresti il risultato.
 
-Controlla: 1) c’è un compito preciso? 2) il pubblico è indicato? 3) i fatti sono presenti? 4) ci sono limiti verificabili? 5) il formato è chiaro? Se manca una voce, correggi la richiesta prima di proseguire.
+### Esempio
 
-## Migliorare la risposta — 10 minuti
+“Riscrivi in modo cordiale questo messaggio, senza cambiare il senso: Vorrei spostare l’appuntamento da martedì a giovedì. Chiedi se è possibile.” Controllo che i due giorni siano corretti e che il testo chieda disponibilità, senza dare lo spostamento per confermato.
 
-Saprai dare un feedback preciso e ottenere una seconda versione più utile.
+### Autoverifica
 
-### La prima risposta non è la consegna finale
+Ho indicato un compito concreto.
 
-Dopo una prima bozza, confronta il testo con il prompt. Ha rispettato il formato? Ha aggiunto informazioni? Il linguaggio è adatto al pubblico? Prima di cambiare tutto, individua uno o due problemi specifici.
+Ho fornito il materiale o il contesto necessario.
 
-Dire “non mi piace” non spiega come migliorare. Dire “togli gli aggettivi generici, mantieni solo i servizi forniti e riduci a 40 parole” indica un intervento controllabile. Puoi chiedere due alternative, confrontarle e spiegare quali parti vuoi conservare.
+Ho scritto come controllerò il risultato.
 
-### Una revisione guidata
+## Livello 2 — Una richiesta chiara
 
-Questa è una risposta simulata, scritta per l’esercizio. Non proviene da una chiamata a un modello. Cerca le informazioni che non trovi nel brief.
+Dai all’AI una consegna facile da capire.
 
-BOZZA DA CORREGGERE
-“Officina Pedale, leader in città da vent’anni, ripara qualsiasi bicicletta in 24 ore. Il nostro team certificato offre i prezzi più bassi del mercato. Vieni a trovarci senza appuntamento!”
+### Il prompt è una consegna
 
-FEEDBACK UTILE
-“Elimina anzianità, certificazioni, confronti sui prezzi e tempi, perché non sono nel brief. Limita i servizi alle bici urbane, ai freni e alle camere d’aria. Correggi l’accesso: si riceve su appuntamento tramite modulo. Restituisci una versione di massimo 45 parole.”
+“Fammi qualcosa di bello” lascia aperte troppe decisioni. Bello per chi? Per fare cosa?
 
-### Quando continuare e quando ripartire
+Un obiettivo preciso rende la risposta più facile da valutare. Per esempio: scrivi tre titoli per un negozio di bici.
 
-Nella stessa conversazione puoi richiamare una bozza precedente, ma è utile ripetere i vincoli cruciali. Non dare per scontato che ogni dettaglio rimanga sempre disponibile: conversazioni lunghe e allegati possono essere gestiti diversamente dai vari sistemi.
+Non serve usare parole complicate. Scrivi come parleresti a una persona che non conosce il tuo progetto.
 
-Quando cambi attività o pubblico, una nuova conversazione con un breve riepilogo può evitare confusione. Non esiste un numero perfetto di revisioni: fermati quando i criteri sono soddisfatti. Se un errore fattuale ricompare, verifica la fonte e correggi il dato.
+Prima il compito. Poi i dettagli utili.
 
-### Esercizio
+### Quattro ingredienti
 
-Dedica 2 minuti a elencare le affermazioni non supportate della bozza. In 3 minuti scrivi il tuo messaggio di revisione. In altri 2 minuti scrivi o genera la nuova versione e confrontala con il brief. Evita di chiedere soltanto “rendila più professionale”.
+Obiettivo: che cosa deve fare? Contesto: per chi, e con quali informazioni?
 
-### Soluzione e criteri
+Vincoli: che cosa deve rispettare o evitare? Formato: come deve presentare il risultato?
 
-Affermazioni non supportate: leader in città, vent’anni, qualsiasi bicicletta, 24 ore, team certificato, prezzi più bassi. “Senza appuntamento” contraddice il brief.
+Esempio: tre titoli, per ciclisti urbani, entro otto parole ciascuno, in un elenco.
 
-Versione possibile: “Officina Pedale si occupa della riparazione di biciclette urbane, della manutenzione dei freni e della sostituzione delle camere d’aria. Per richiedere un appuntamento, compila il modulo di contatto.”
+Obiettivo · contesto · vincoli · formato
 
-Il risultato funziona perché conserva i servizi confermati e non introduce promesse. Valuta i fatti prima dell’eleganza dello stile.
+### Conosci Officina Pedale
 
-## Controllare prima di usare — 10 minuti
+Da ora lavoriamo su un’attività inventata: Officina Pedale. Ripara bici urbane, cura i freni e sostituisce camere d’aria.
 
-Saprai individuare informazioni inventate e ridurre i dati condivisi.
+Riceve su appuntamento tramite modulo di contatto. Non conosciamo prezzi, indirizzo, orari o tempi di riparazione.
 
-### Le allucinazioni: informazioni plausibili ma errate
+Questi sono i fatti disponibili. Puoi usarli per scrivere, ma non riempire i vuoti con promesse.
 
-Si parla spesso di “allucinazione” quando un sistema genera contenuti falsi o non supportati, presentandoli come credibili. Può trattarsi di un indirizzo, una citazione, una statistica o un servizio mai indicato. Non è necessario che il testo sembri strano.
+I fatti disponibili sono il tuo punto di partenza.
 
-Chiedere “sei sicuro?” può produrre una correzione, ma non è una verifica indipendente. Anche chiedere una fonte non basta: il riferimento potrebbe essere inesatto. Quando un fatto conta, apri la fonte originale, controlla che esista e che sostenga proprio quell’affermazione.
+### Confronto 1
 
-### Tre controlli, nell’ordine
+Servono esattamente tre titoli brevi. Quale richiesta è più controllabile?
 
-1. Fedeltà: confronta la risposta con i materiali forniti. Cerchia nomi, numeri, promesse e affermazioni assolute. Ogni elemento deve avere un supporto.
+A. Scrivi tre titoli per Officina Pedale, massimo otto parole ciascuno, in elenco.
 
-2. Adeguatezza: verifica che il testo risponda al compito, rispetti il pubblico e non usi stereotipi o etichette offensive. Un testo corretto può comunque essere inadatto alla situazione.
+B. Scrivi alcuni bei titoli per Officina Pedale, con una lunghezza abbastanza breve.
 
-3. Utilizzabilità: controlla formato, chiarezza, errori e passaggi operativi. Un pulsante che dice “prenota” non prova che esista davvero una prenotazione funzionante. Prima di pubblicare per un cliente, fai approvare le informazioni sull’attività.
+Soluzione: A. A indica numero, limite e formato. B è comprensibile, ma “alcuni” e “abbastanza breve” lasciano criteri indefiniti.
 
-### Condividi solo quello che serve
+### Confronto 2
 
-Per esercitarti usa dati inventati. Nelle attività reali evita di incollare password, credenziali, documenti riservati o elenchi completi di clienti. Chiediti quali informazioni siano davvero necessarie e se puoi sostituirle con esempi o segnaposto.
+Il testo è destinato a persone che usano la bici in città.
 
-Sostituire il nome non garantisce che un testo sia anonimo: indirizzi, dettagli degli ordini o combinazioni di informazioni possono identificare una persona. Le regole del servizio e quelle della tua organizzazione vanno controllate prima di usare dati reali. Questo corso non richiede alcuna condivisione di dati personali.
+A. Spiega la manutenzione dei freni a tecnici specializzati, usando sigle non spiegate.
 
-### Esercizio
+B. Spiega la manutenzione dei freni a ciclisti urbani, con parole comuni e sigle spiegate.
 
-In 3 minuti controlla questa bozza simulata: “Officina Pedale, in via Roma 18, garantisce riparazioni in giornata a partire da 15 euro. Ripara bici urbane e riceve su appuntamento tramite modulo”. Segna ciò che è supportato, ciò che manca e la fonte che consulteresti. Negli ultimi 3 minuti spiega come useresti un messaggio di un cliente come esempio senza copiarne dati personali o dettagli riservati.
+Soluzione: B. B rispetta il pubblico. A non è un prompt sbagliato in assoluto: è adatto a un pubblico diverso.
 
-### Soluzione e criteri
+### Confronto 3
 
-Supportato: bici urbane e appuntamento tramite modulo. Non supportato: via Roma 18, riparazioni in giornata, 15 euro. Chiedi conferma al titolare e usa documenti approvati, come il listino, se disponibili. Fino ad allora elimina quei dettagli.
+Manca il listino. Devi scrivere una presentazione corretta.
 
-Per l’esempio del cliente, crea un messaggio fittizio che conservi solo il tipo di problema. Evita nome, recapiti, numero ordine e dettagli identificativi. Non basta chiedere all’AI di “dimenticare” dati già inviati. Se non sai se un dato si possa condividere, non usarlo nell’esercizio.
+A. Usa i servizi forniti e segnala i prezzi come dato da chiedere al titolare.
 
-## Il tuo primo mini-progetto — 12 minuti
+B. Usa i servizi forniti e aggiungi prezzi plausibili per rendere il testo completo.
 
-Realizzerai un piccolo kit di contenuti applicando il metodo completo.
+Soluzione: A. A separa dati noti e mancanti. B può trasformare un’ipotesi in un’offerta commerciale non approvata.
 
-### La consegna
+### Laboratorio
 
-Ora metti insieme i quattro passaggi: definisci il compito, fornisci il contesto, rivedi il risultato e controlla i fatti. L’obiettivo è preparare contenuti per Officina Pedale, non realizzare un sito funzionante.
+Dedica 4 minuti a scrivere il prompt per la presentazione di Officina Pedale. Inserisci i quattro ingredienti. Usa il brief nelle slide e poni un limite di 50 parole. Non generare ancora il testo: progetta una consegna precisa.
 
-Consegna tre elementi: una descrizione di massimo 50 parole, tre domande frequenti con risposte brevi e un testo per un pulsante di massimo 5 parole. Usa solo i fatti del brief. Se una domanda richiede dati mancanti, sostituiscila con una domanda a cui puoi rispondere oppure segnala il dato da ottenere.
+### Esempio
 
-### Il brief da tenere accanto
+“Scrivi una presentazione di massimo 50 parole per Officina Pedale, rivolta a ciclisti urbani. Usa solo questi fatti: ripara bici urbane, cura i freni, sostituisce camere d’aria e riceve su appuntamento tramite modulo. Tono semplice. Restituisci un paragrafo; segnala separatamente i dati mancanti senza inventarli.”
 
-Attività inventata: Officina Pedale. Pubblico: chi usa una bici in città. Servizi: riparazione di biciclette urbane, manutenzione dei freni, sostituzione delle camere d’aria. Accesso: su appuntamento tramite modulo di contatto. Tono: semplice, concreto e cordiale. Non sono disponibili prezzi, indirizzo, orari o tempi di lavorazione.
+### Autoverifica
 
-Puoi usare un assistente esterno con questo brief fittizio. Senza account, scrivi tu una prima bozza e applica gli stessi controlli: eserciterai progettazione e revisione, anche senza generazione automatica.
+Sono presenti obiettivo e pubblico.
 
-### Esercizio
+Ho incluso fatti, vincoli e formato.
 
-Minuti 1–3: scrivi il prompt completo. Minuti 4–6: genera o scrivi il kit. Minuti 7–8: trova almeno un possibile miglioramento e applicalo. Minuti 9–10: confronta tutto con il brief, conta le parole della descrizione e controlla il pulsante. Salva prompt, versione finale e una breve nota su cosa hai corretto.
+Ho vietato l’invenzione dei dati mancanti.
 
-### Soluzione e criteri
+## Livello 3 — La seconda versione
 
-PROMPT DI RIFERIMENTO
-“Usa solo i fatti di questo brief: Officina Pedale ripara bici urbane, esegue manutenzione freni e sostituisce camere d’aria. Riceve su appuntamento tramite modulo. Scrivi una descrizione entro 50 parole, tre FAQ con risposte entro 25 parole ciascuna e un testo per pulsante entro 5 parole. Tono semplice e cordiale. Non inventare dati; elenca a parte ciò che manca.”
+Impara a correggere una risposta con precisione.
 
-ESEMPIO DI CONSEGNA
-Descrizione: “Officina Pedale si occupa della tua bici urbana: riparazioni, manutenzione dei freni e sostituzione delle camere d’aria. Si riceve su appuntamento. Compila il modulo di contatto per richiederlo.”
-FAQ 1: “Di quali biciclette vi occupate?” — “Ci occupiamo di biciclette urbane.”
-FAQ 2: “Quali servizi offrite?” — “Riparazioni di bici urbane, manutenzione dei freni e sostituzione delle camere d’aria.”
-FAQ 3: “Come richiedo un appuntamento?” — “Compila il modulo di contatto per richiedere un appuntamento.”
+### La prima bozza è l’inizio
+
+Una risposta può essere troppo lunga, troppo generica oppure contenere un’informazione non fornita.
+
+Prima di riscrivere la richiesta, identifica il problema. Che cosa deve cambiare? Che cosa vuoi conservare?
+
+Dare un feedback significa indicare la modifica, non limitarsi a dire “non mi piace”.
+
+Osserva → indica → correggi
+
+### Proviamo con una bozza
+
+Esempio simulato: “Officina Pedale ripara qualsiasi bici in 24 ore. Vieni senza appuntamento!”
+
+Il brief parla solo di bici urbane e non indica tempi. Dice inoltre che occorre richiedere un appuntamento.
+
+Feedback: limita il testo alle bici urbane, elimina le 24 ore e invita a richiedere un appuntamento tramite modulo.
+
+Correggi i fatti prima di abbellire.
+
+### Mantieni i vincoli importanti
+
+Nella conversazione puoi chiedere di modificare la bozza precedente. Ripeti i fatti e i limiti fondamentali quando serve.
+
+Se cambi attività o pubblico, riparti con una richiesta che contenga il nuovo contesto.
+
+Non cercare infinite versioni: fermati quando il testo rispetta i criteri e hai controllato i fatti.
+
+Una revisione ha un obiettivo preciso.
+
+### Confronto 1
+
+La bozza è lunga e piena di slogan.
+
+A. Rendila più bella, interessante e professionale.
+
+B. Riduci a 40 parole, elimina gli slogan e mantieni i servizi elencati.
+
+Soluzione: B. B traduce il problema in modifiche verificabili. A esprime un gusto ma non chiarisce come intervenire.
+
+### Confronto 2
+
+La bozza promette “riparazioni in 24 ore”, dato non disponibile.
+
+A. Elimina il riferimento alle 24 ore: nel brief non ci sono tempi di riparazione.
+
+B. Scrivi “riparazioni velocissime”: così non compare più il numero 24.
+
+Soluzione: A. A elimina la promessa non supportata. B la sostituisce con un’altra promessa, ancora priva di conferma.
+
+### Confronto 3
+
+Hai cambiato cliente: ora scrivi per una biblioteca.
+
+A. Continua con tutti i dettagli della precedente officina.
+
+B. Usa questo nuovo brief della biblioteca e sostituisci il contesto precedente.
+
+Soluzione: B. B rende esplicito il cambio di contesto. A rischia di mescolare servizi e pubblico di due attività diverse.
+
+### Laboratorio
+
+In 4 minuti correggi questa bozza simulata: “Officina Pedale, la migliore in città, ripara tutte le bici in giornata. Passa quando vuoi!”. Scrivi prima il feedback e poi una tua versione corretta. Non serve un servizio AI esterno.
+
+### Esempio
+
+Feedback: “Elimina il primato e la promessa in giornata. Limita i servizi alle bici urbane e correggi l’accesso su appuntamento tramite modulo.” Versione: “Officina Pedale ripara bici urbane, esegue manutenzione dei freni e sostituisce camere d’aria. Richiedi un appuntamento tramite il modulo di contatto.”
+
+### Autoverifica
+
+Ho eliminato le promesse senza supporto.
+
+Ho corretto i servizi e l’accesso su appuntamento.
+
+Ho scritto sia il feedback sia la versione rivista.
+
+## Livello 4 — Occhio agli errori
+
+Distingui ciò che sai da ciò che va verificato.
+
+### Credibile non basta
+
+Un’AI può inventare fatti, nomi, numeri o fonti. Si usa spesso il termine “allucinazione” per questi contenuti falsi o non supportati.
+
+Il tono sicuro non rivela se un’informazione è corretta. Una frase scorrevole può contenere un indirizzo inventato.
+
+Cerchia i fatti: nomi, numeri, date, servizi e promesse. Poi chiediti da dove arrivano.
+
+Per ogni fatto, cerca un riscontro.
+
+### Verifica fuori dalla risposta
+
+Chiedere “sei sicuro?” può ottenere una correzione, ma non è un controllo indipendente.
+
+Se una risposta cita una fonte, aprila: deve esistere e sostenere proprio l’affermazione che stai usando.
+
+Per il nostro caso, prezzi e orari vanno confermati dal titolare o da documenti approvati. Finché mancano, omettili.
+
+Una fonte citata va anche controllata.
+
+### Tre domande prima di usare
+
+È fedele? Confronta la risposta con il brief e le fonti.
+
+È adatta? Controlla il pubblico, il tono e le informazioni davvero necessarie.
+
+È utilizzabile? Verifica limiti, chiarezza e azioni: richiedere un appuntamento non equivale a confermarlo.
+
+Fedele · adatto · utilizzabile
+
+### Confronto 1
+
+Devi controllare una descrizione usando il brief originale.
+
+A. Confronta descrizione e brief; elenca separatamente tutte le affermazioni non supportate.
+
+B. Leggi la descrizione e conferma che è corretta, purché sembri realistica.
+
+Soluzione: A. A imposta un confronto utile, da rivedere comunque. B usa la plausibilità al posto delle prove.
+
+### Confronto 2
+
+Non sai se l’indirizzo proposto sia vero.
+
+A. Conferma l’indirizzo se lo hai scritto anche nella risposta precedente.
+
+B. Segnala l’indirizzo come non verificato; lo controllerò con il titolare prima di usarlo.
+
+Soluzione: B. B mantiene visibile l’incertezza e prevede un riscontro. Ripetere un dato, come in A, non lo rende vero.
+
+### Confronto 3
+
+Il cliente riceve richieste tramite modulo, poi conferma l’appuntamento.
+
+A. Scrivi un pulsante per richiedere l’appuntamento, senza presentarlo come già confermato.
+
+B. Scrivi un pulsante che dica appuntamento confermato appena si apre il modulo.
+
+Soluzione: A. A descrive l’azione disponibile. B promette una conferma che non è avvenuta.
+
+### Laboratorio
+
+In 4 minuti esamina questa bozza: “Officina Pedale è in via Roma 18, ripara bici urbane a partire da 15 euro e riceve su appuntamento tramite modulo”. Dividi i fatti in confermati e da verificare. Per questi ultimi indica come faresti la verifica.
+
+### Esempio
+
+Confermati: riparazione bici urbane, appuntamento tramite modulo. Da verificare: via Roma 18 e prezzo da 15 euro. Chiederei indirizzo e listino approvati al titolare. Nel frattempo eliminerei i due dettagli dalla bozza.
+
+### Autoverifica
+
+Ho separato fatti noti e dati mancanti.
+
+Ho indicato una verifica indipendente.
+
+Non ho sostituito i dati mancanti con ipotesi.
+
+## Livello 5 — Dati sotto controllo
+
+Usa solo le informazioni che servono.
+
+### Meno dati, stessa esercitazione
+
+Per imparare puoi usare nomi e situazioni inventati, come Officina Pedale. Non occorrono dati di clienti reali.
+
+Non inserire password o credenziali in una richiesta. Per una bozza, spesso bastano dettagli generici.
+
+Prima di condividere dati reali, controlla le regole del servizio e quelle della tua organizzazione.
+
+Usa il minimo necessario.
+
+### Togliere un nome può non bastare
+
+Un testo può identificare qualcuno anche senza il nome: indirizzo, numero ordine e dettagli insoliti possono bastare.
+
+Per esercitarti, ricrea il tipo di problema con un messaggio completamente inventato.
+
+Esempio: “Un cliente vorrebbe spostare un appuntamento”. Il recapito personale non ti aiuta a imparare a rispondere.
+
+Conserva il problema, non i dati personali.
+
+### Pratica gratuita, qui dentro
+
+Le sfide di questo corso sono esempi preparati: non contattano un modello AI e non richiedono abbonamenti.
+
+Il quaderno ti permette di costruire e revisionare il prompt. I criteri sono per l’autovalutazione: il testo non viene giudicato da un’AI.
+
+L’audio legge il testo delle slide con una voce del browser. Puoi sempre continuare leggendo.
+
+Per imparare il metodo bastano gli esempi.
+
+### Confronto 1
+
+Vuoi esercitarti a rispondere a una richiesta di appuntamento.
+
+A. Scrivi una risposta a questo caso inventato: un cliente chiede di spostare l’appuntamento.
+
+B. Scrivi una risposta usando l’intera rubrica clienti, incluse note e recapiti personali.
+
+Soluzione: A. A contiene il necessario per l’esercizio. B aggiunge dati personali che non servono a imparare la risposta.
+
+### Confronto 2
+
+Devi spiegare a un collega dove inserire una password.
+
+A. Usa la mia password reale come esempio nel testo della guida.
+
+B. Usa il segnaposto [PASSWORD] nel testo della guida, senza credenziali reali.
+
+Soluzione: B. B spiega la procedura senza esporre una credenziale. A introduce un segreto che non serve alla spiegazione.
+
+### Confronto 3
+
+Vuoi creare un esempio partendo da un reclamo reale.
+
+A. Togli soltanto il nome; conserva indirizzo e numero ordine.
+
+B. Crea un caso fittizio con lo stesso tipo di problema, senza dettagli identificativi.
+
+Soluzione: B. B permette di esercitarsi sulla situazione. A lascia informazioni che potrebbero identificare la persona.
+
+### Laboratorio
+
+In 4 minuti inventa un messaggio di un cliente che vuole cambiare appuntamento. Non inserire nomi veri o recapiti. Scrivi il prompt per una risposta cortese che chieda disponibilità e non inventi la conferma.
+
+### Esempio
+
+“Caso inventato: un cliente vorrebbe spostare l’appuntamento a giovedì. Scrivi una risposta cordiale entro 40 parole: comunica che la disponibilità deve essere verificata, senza confermare lo spostamento. Non aggiungere orari o recapiti.”
+
+### Autoverifica
+
+Il caso è completamente inventato.
+
+Ho incluso solo i dettagli utili.
+
+Non ho promesso una disponibilità non verificata.
+
+## Livello 6 — Missione finale
+
+Metti insieme tutto quello che hai imparato.
+
+### Un mini-progetto, un metodo
+
+Prepara i contenuti per la pagina di Officina Pedale: una breve presentazione, tre domande frequenti e un pulsante.
+
+Usa solo il brief: bici urbane, freni, camere d’aria, appuntamento tramite modulo. Non ci sono prezzi o tempi.
+
+L’obiettivo è un kit di testi. Un testo per un pulsante non crea da solo un sito o una prenotazione.
+
+Dal brief a un risultato controllato.
+
+### La tua checklist di partenza
+
+Scrivi il compito, il pubblico e i fatti. Scegli il formato: presentazione, tre domande con risposte e pulsante.
+
+Indica i limiti: 50 parole per la presentazione e cinque per il pulsante. Chiedi di segnalare i dati mancanti.
+
+Rivedi i testi usando i criteri appresi. Puoi scriverli tu nel laboratorio: non serve aprire altri strumenti.
+
+Progetta → scrivi → rivedi → verifica
+
+### I punti raccontano il percorso
+
+Ogni confronto risolto vale 20 punti, anche dopo un errore. Ogni laboratorio completato vale 40 punti.
+
+Puoi sbagliare e riprovare senza perdere vite. Rivedere la stessa attività non aggiunge punti: conta quello che hai completato.
+
+I sei livelli valgono 600 punti complessivi. È un traguardo didattico, non una certificazione professionale.
+
+L’obiettivo è capire perché.
+
+### Confronto 1
+
+Vuoi ottenere il kit con formati chiari.
+
+A. Scrivi qualcosa per il sito, scegli tu tutto il resto.
+
+B. Usa il brief: presentazione entro 50 parole, tre FAQ e un pulsante entro cinque parole.
+
+Soluzione: B. B definisce i risultati attesi. A delega anche decisioni che ti servono per valutare il lavoro.
+
+### Confronto 2
+
+Nelle FAQ manca il prezzo della manutenzione.
+
+A. Evita di indicare un prezzo; elencalo tra i dati da ottenere dal titolare.
+
+B. Aggiungi un prezzo realistico: il titolare potrà correggerlo se se ne accorge.
+
+Soluzione: A. A mantiene separati fatti e lacune. B crea un’informazione commerciale non confermata.
+
+### Confronto 3
+
+Hai ricevuto il kit. Quale richiesta prepara un controllo utile?
+
+A. Dichiara che tutto è pronto per essere pubblicato, senza ulteriori revisioni.
+
+B. Confronta il kit con il brief ed evidenzia aggiunte e limiti non rispettati; poi controllerò anch’io.
+
+Soluzione: B. B aiuta a organizzare la revisione e mantiene il controllo umano. A salta la verifica.
+
+### Laboratorio
+
+Dedica almeno 4 minuti al tuo kit. Scrivi il prompt, poi una presentazione, tre domande frequenti con risposta e un pulsante per Officina Pedale. Puoi scriverli tu. Confronta tutto con il brief e annota una correzione fatta. Se ti serve più tempo, prosegui al tuo ritmo.
+
+### Esempio
+
+Prompt: “Con i soli fatti del brief, crea una presentazione entro 50 parole, tre FAQ e un pulsante entro cinque parole per ciclisti urbani. Segnala i dati mancanti”.
+Presentazione: “Officina Pedale ripara bici urbane, cura i freni e sostituisce camere d’aria. Richiedi un appuntamento tramite il modulo di contatto.”
+FAQ: “Quali bici trattate?” — “Bici urbane”. “Quali servizi offrite?” — “Riparazioni, manutenzione freni e sostituzione camere d’aria”. “Come richiedo un appuntamento?” — “Tramite modulo di contatto”.
 Pulsante: “Richiedi un appuntamento”.
-Dati da chiedere: indirizzo, orari, prezzi, tempi e modalità di conferma.
+Revisione: ho eliminato un prezzo non presente nel brief.
 
-AUTOVALUTAZIONE: assegna 1 punto per ciascun criterio: tutti i servizi sono corretti; non ci sono fatti inventati; sono presenti i tre formati; i limiti di parole sono rispettati; l’appuntamento è richiesto, non presentato come già confermato. Obiettivo 5/5: correggi le voci mancanti. Non c’è un’unica formulazione giusta.
+### Autoverifica
 
-## Verifica e prossimi passi — 8 minuti
+Ho incluso prompt, presentazione, tre FAQ e pulsante.
 
-Verificherai ciò che hai imparato e saprai cosa ripassare.
+Ho controllato i limiti e tutti i fatti rispetto al brief.
 
-### Il metodo da portare con te
-
-Prima definisci il risultato. Poi fornisci informazioni e vincoli. Leggi la bozza, chiedi correzioni precise e verifica prima di usare. È un ciclo: obiettivo → richiesta → risposta → revisione → controllo.
-
-Ricorda quattro parole: obiettivo, contesto, vincoli, formato. E una domanda finale: “Quali affermazioni posso davvero sostenere?”. Conserva il prompt e il kit del laboratorio: sono il tuo primo esempio di lavoro.
-
-### Come usare la verifica
-
-Dedica circa 7 minuti alle otto domande e alle spiegazioni. Per superare l’autoverifica servono almeno 6 risposte corrette. Il punteggio misura il riconoscimento dei concetti; il mini-progetto serve a verificarne l’applicazione.
-
-Se una risposta è sbagliata, rileggi la tappa indicata. Dopo il corso, ripeti il laboratorio su un’altra attività inventata. Cambia pubblico e servizi: verifica se riesci ad adattare il prompt invece di copiarlo senza ragionare.
-
-## Quiz
-
-1. Una risposta è scritta bene e sembra sicura. Che cosa puoi concludere?
-
-- Che i fatti sono stati verificati
-
-- Che è leggibile, ma i fatti vanno ancora controllati
-
-- Che non occorre rileggerla
-
-2. Quale richiesta è più facile da valutare?
-
-- Scrivi qualcosa di bello
-
-- Agisci da massimo esperto mondiale
-
-- Scrivi 3 titoli entro 8 parole ciascuno usando i servizi del brief
-
-3. L’AI aggiunge un prezzo non presente nel brief. Cosa fai?
-
-- Lo elimino o lo verifico con un listino approvato
-
-- Lo tengo perché sembra plausibile
-
-- Chiedo di scriverlo con più sicurezza
-
-4. Il testo è troppo generico. Quale feedback aiuta?
-
-- Non mi piace
-
-- Sei sicuro?
-
-- Togli gli slogan, cita solo i tre servizi e resta entro 40 parole
-
-5. Quale materiale usi per esercitarti?
-
-- L’elenco completo dei clienti
-
-- Un caso inventato con i soli dettagli necessari
-
-- Un documento riservato togliendo soltanto il titolo
-
-6. Una risposta cita una fonte. Qual è il controllo utile?
-
-- Verificare soltanto che il link sia blu
-
-- Aprire la fonte e verificare che sostenga l’affermazione
-
-- Chiedere alla stessa AI se è sicura
-
-7. Il brief dice “appuntamento tramite modulo”. Quale pulsante è coerente?
-
-- Riparazione garantita oggi
-
-- Appuntamento già confermato
-
-- Richiedi un appuntamento
-
-8. Hai ottenuto una buona prima bozza. Qual è il passo successivo?
-
-- Controllare fatti, vincoli e adeguatezza prima di usarla
-
-- Pubblicarla automaticamente
-
-- Aggiungere dettagli plausibili per completarla
-
-## Soluzioni del quiz
-
-1. Che è leggibile, ma i fatti vanno ancora controllati. Lo stile non garantisce accuratezza. Confronta i fatti con il materiale e le fonti. Ripasso: tappa 1.
-
-2. Scrivi 3 titoli entro 8 parole ciascuno usando i servizi del brief. La terza richiesta specifica risultato, limite e riferimento. Ripasso: tappa 2.
-
-3. Lo elimino o lo verifico con un listino approvato. Un dato mancante non può diventare una promessa. Ripasso: tappa 4.
-
-4. Togli gli slogan, cita solo i tre servizi e resta entro 40 parole. Una correzione specifica consente di valutare la nuova versione. Ripasso: tappa 3.
-
-5. Un caso inventato con i soli dettagli necessari. I dati fittizi permettono la pratica senza condividere dati reali. Ripasso: tappa 4.
-
-6. Aprire la fonte e verificare che sostenga l’affermazione. La presenza di una citazione non prova che sia corretta o pertinente. Ripasso: tappa 4.
-
-7. Richiedi un appuntamento. Una richiesta non equivale a una conferma né a una garanzia sui tempi. Ripasso: tappa 5.
-
-8. Controllare fatti, vincoli e adeguatezza prima di usarla. La revisione resta parte del lavoro, anche con un buon prompt. Ripasso: tappe 3 e 4.
+Ho annotato una revisione, senza promesse inventate.

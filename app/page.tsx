@@ -405,7 +405,7 @@ export default function Home() {
     context.fillStyle = '#89a7ff';
     context.font = '700 27px Inter, sans-serif';
     context.letterSpacing = '5px';
-    context.fillText('PRIMO PASSO · COLLECTIBLE', 80, 105);
+    context.fillText('AI ACADEMY · COLLECTIBLE', 80, 105);
     const image = await loadCanvasImage(item.image);
     context.drawImage(image, 300, 160, 600, 600);
     context.textAlign = 'center';
@@ -435,11 +435,13 @@ export default function Home() {
     context.textAlign = 'left';
     context.fillStyle = '#ffffff';
     context.font = '800 31px Inter, sans-serif';
-    context.fillText('ai. primo passo', 80, 1405);
+    const brandMark = await loadCanvasImage('./brand/ai-academy-mark.png');
+    context.drawImage(brandMark, 80, 1320, 90, 90);
+    context.fillText('AI Academy', 190, 1380);
     context.textAlign = 'right';
     context.fillStyle = '#91a3c3';
     context.font = '500 22px Inter, sans-serif';
-    context.fillText('LA SCUOLA DEL FARE', 1120, 1405);
+    context.fillText('LEARN · LEVEL UP · GO FURTHER', 1120, 1405);
     return canvasBlob(canvas);
   }
   async function shareAchievement(item: Achievement) {
@@ -453,7 +455,7 @@ export default function Home() {
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         try {
           await navigator.share({
-            title: `${item.name} · Primo Passo`,
+            title: `${item.name} · AI Academy`,
             text: `Ho conquistato ${item.name} nel corso Basi di Intelligenza Artificiale.`,
             files: [file],
           });
@@ -492,7 +494,8 @@ export default function Home() {
     context.strokeRect(58, 58, 1684, 1154);
     context.fillStyle = '#17305d';
     context.font = '800 42px Inter, sans-serif';
-    context.fillText('ai. primo passo', 115, 145);
+    const brandLogo = await loadCanvasImage('./brand/ai-academy-wordmark.png');
+    context.drawImage(brandLogo, 115, 82, 150, 96);
     context.textAlign = 'right';
     context.fillStyle = '#7b6847';
     context.font = '700 22px Inter, sans-serif';
@@ -531,7 +534,7 @@ export default function Home() {
     context.fillText('ENTE FORMATORE', 115, 1055);
     context.fillStyle = '#14294f';
     context.font = '700 27px Inter, sans-serif';
-    context.fillText('Primo Passo · La scuola del fare', 115, 1095);
+    context.fillText('AI Academy · Learn | Level up | Go further', 115, 1095);
     context.textAlign = 'right';
     context.fillStyle = '#7b6847';
     context.font = '700 20px Inter, sans-serif';
@@ -555,10 +558,20 @@ export default function Home() {
     <>
       <header className="topbar">
         <a className="brand" href="./">
-          <span className="brand-mark">ai.</span>
-          <span>
-            primo passo<small>LA SCUOLA DEL FARE</small>
-          </span>
+          <img
+            className="brand-wordmark"
+            src="./brand/ai-academy-wordmark.png"
+            alt="AI Academy · Learn, Level up, Go further"
+            width={150}
+            height={96}
+          />
+          <img
+            className="brand-symbol"
+            src="./brand/ai-academy-mark.png"
+            alt="AI Academy"
+            width={48}
+            height={48}
+          />
         </a>
         <div className="scoreboard">
           <span className="metric-pill xp-pill">
@@ -1275,7 +1288,7 @@ export default function Home() {
           </aside>
         </div>
         <footer className="site-footer">
-          <span>Primo passo · Basi di AI</span>
+          <span>AI Academy · Basi di AI</span>
           <span>
             60 minuti stimati, inclusa la pratica · Attestato di partecipazione
           </span>
@@ -1365,7 +1378,7 @@ export default function Home() {
                 </DialogDescription>
               </DialogHeader>
               <div className={`collectible-preview rarity-${selectedAchievement.rarity.toLowerCase()}`}>
-                <span className="preview-brand">PRIMO PASSO · COLLECTIBLE</span>
+                <span className="preview-brand">AI ACADEMY · COLLECTIBLE</span>
                 <img
                   src={selectedAchievement.image}
                   alt={`Trofeo ${selectedAchievement.name}`}
@@ -1491,7 +1504,7 @@ export default function Home() {
           </DialogHeader>
           <div className="certificate-preview">
             <div className="certificate-head">
-              <strong>ai. primo passo</strong>
+              <img src="./brand/ai-academy-wordmark.png" alt="AI Academy" width={88} height={56} />
               <span>CERTIFICATO DI PARTECIPAZIONE</span>
             </div>
             <img src="./achievements/applied-intelligence.png" alt="" width={105} height={105} />
@@ -1501,7 +1514,7 @@ export default function Home() {
             <h4>Basi di Intelligenza Artificiale</h4>
             <p>60 minuti · 6 moduli · 42 attività · 600 XP</p>
             <div className="certificate-foot">
-              <span>Primo Passo · La scuola del fare</span>
+              <span>AI Academy · Learn | Level up | Go further</span>
               <code>{state.certificateId}</code>
             </div>
           </div>

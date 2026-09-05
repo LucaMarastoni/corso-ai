@@ -1,4 +1,4 @@
-# Primo Passo · Basi di Intelligenza Artificiale
+# AI Academy · Basi di Intelligenza Artificiale
 
 Demo frontend di un corso online autonomo di 60 minuti. Progressi, quaderno, nome e certificato rimangono nel `localStorage` del browser usato dallo studente.
 

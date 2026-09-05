@@ -32,6 +32,7 @@ import {
   Clock3,
   Layers3,
   Share2,
+  UserRound,
 } from 'lucide-react';
 import { levels } from './journey';
 import { achievements, type Achievement } from './achievements';
@@ -58,6 +59,8 @@ const levelOutcomes = [
   'Lavora con esempi realistici senza esporre informazioni sensibili.',
   'Consegna un kit di contenuti completo, coerente e controllato.',
 ];
+
+export const dynamic = 'force-static';
 
 function loadCanvasImage(src: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
@@ -119,6 +122,7 @@ export default function Home() {
     [celebrate, setCelebrate] = useState(false),
     [selectedAchievement, setSelectedAchievement] =
       useState<Achievement | null>(null),
+    [showProfile, setShowProfile] = useState(false),
     [showCertificate, setShowCertificate] = useState(false),
     [showFinale, setShowFinale] = useState(false),
     [shareStatus, setShareStatus] = useState('');
@@ -493,7 +497,7 @@ export default function Home() {
     context.fillStyle = '#7b6847';
     context.font = '700 22px Inter, sans-serif';
     context.fillText('CERTIFICATO DI PARTECIPAZIONE', 1685, 145);
-    const image = await loadCanvasImage('/achievements/applied-intelligence.png');
+    const image = await loadCanvasImage('./achievements/applied-intelligence.png');
     context.drawImage(image, 720, 155, 360, 360);
     context.textAlign = 'center';
     context.fillStyle = '#8d7444';
@@ -550,7 +554,7 @@ export default function Home() {
   return (
     <>
       <header className="topbar">
-        <a className="brand" href="/">
+        <a className="brand" href="./">
           <span className="brand-mark">ai.</span>
           <span>
             primo passo<small>LA SCUOLA DEL FARE</small>
@@ -568,7 +572,15 @@ export default function Home() {
             <small>{state.streakDays === 1 ? 'giorno' : 'giorni'}</small>
           </span>
         </div>
-        <a className="download-link" href="/materiali/dispensa.md" download>
+        <button
+          className="profile-trigger"
+          onClick={() => setShowProfile(true)}
+          aria-label="Apri il profilo"
+        >
+          <UserRound size={18} />
+          <span>Profilo</span>
+        </button>
+        <a className="download-link" href="./materiali/dispensa.md" download>
           <BookOpen size={18} />
           <span>Dispensa</span>
         </a>
@@ -634,6 +646,39 @@ export default function Home() {
             </div>
           </div>
         </section>
+        <section className="mobile-dashboard" aria-label="Riepilogo personale">
+          <div className="mobile-dashboard-head">
+            <div>
+              <span className="eyebrow">IL TUO PERCORSO</span>
+              <strong>{finished ? 'Corso completato' : level.title}</strong>
+              <small>{completion}% completato · {xp} XP</small>
+            </div>
+            <button
+              className="primary"
+              onClick={() => heading.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+            >
+              {finished ? 'Rivedi' : 'Continua'} <ArrowRight size={17} />
+            </button>
+          </div>
+          <Progress value={completion} aria-label="Progresso personale" />
+          <div className="mobile-achievement-strip">
+            {achievements.slice(0, 4).map((item) => (
+              <button
+                key={item.id}
+                className={item.earned(state) ? 'earned' : ''}
+                onClick={() => setSelectedAchievement(item)}
+              >
+                <img src={item.image} alt="" width={48} height={48} />
+                <span>{item.name}</span>
+              </button>
+            ))}
+            <button className="all-achievements" onClick={() => setShowProfile(true)}>
+              <strong>{earnedCount}/6</strong>
+              <span>Tutti i badge</span>
+            </button>
+          </div>
+          <p>Il percorso è personale e resta salvato su questo dispositivo.</p>
+        </section>
         <div className="section-heading">
           <div>
             <p className="eyebrow">PERCORSO FORMATIVO</p>
@@ -641,6 +686,37 @@ export default function Home() {
           </div>
           <p>Completa ogni modulo per sbloccare il successivo.</p>
         </div>
+        <details className="mobile-module-picker">
+          <summary>
+            <span>
+              <small>MODULO {l + 1} DI 6</small>
+              <strong>{level.title}</strong>
+            </span>
+            <em>{state.completed.includes(l) ? 'Completato' : `${Math.round(((step + 1) / 7) * 100)}%`}</em>
+          </summary>
+          <div>
+            {levels.map((item, index) => (
+              <button
+                key={item.title}
+                disabled={!ready || index > unlocked}
+                className={index === l ? 'active' : ''}
+                onClick={() => navigate(index)}
+              >
+                <span>{String(index + 1).padStart(2, '0')}</span>
+                <strong>{item.title}</strong>
+                <small>
+                  {state.completed.includes(index)
+                    ? 'Completato'
+                    : index > unlocked
+                      ? 'Bloccato'
+                      : index === l
+                        ? 'In corso'
+                        : 'Disponibile'}
+                </small>
+              </button>
+            ))}
+          </div>
+        </details>
         <nav className="level-map" aria-label="Livelli del corso">
           {levels.map((x, n) => (
             <button
@@ -976,7 +1052,7 @@ export default function Home() {
                   {celebrate && (
                     <div className="celebration" role="status">
                       <img
-                        src={finished ? '/achievements/applied-intelligence.png' : '/achievements/signal-frame.png'}
+                        src={finished ? './achievements/applied-intelligence.png' : './achievements/signal-frame.png'}
                         alt=""
                         width={100}
                         height={100}
@@ -1159,7 +1235,7 @@ export default function Home() {
             </section>
             {finished && state.certificateId && (
               <button className="certificate-shortcut" onClick={() => setShowCertificate(true)}>
-                <img src="/achievements/applied-intelligence.png" alt="" width={66} height={66} />
+                <img src="./achievements/applied-intelligence.png" alt="" width={66} height={66} />
                 <span>
                   <small>CERTIFICATO DISPONIBILE</small>
                   <strong>{state.profileName}</strong>
@@ -1205,6 +1281,74 @@ export default function Home() {
           </span>
         </footer>
       </div>
+      <Dialog open={showProfile} onOpenChange={setShowProfile}>
+        <DialogContent className="profile-dialog">
+          <DialogHeader>
+            <DialogTitle>Profilo di apprendimento</DialogTitle>
+            <DialogDescription>
+              Il tuo riepilogo personale su questo dispositivo.
+            </DialogDescription>
+          </DialogHeader>
+          <label className="dialog-name-field" htmlFor="profile-dialog-name">
+            Nome e cognome
+            <input
+              id="profile-dialog-name"
+              value={state.profileName}
+              maxLength={80}
+              autoComplete="name"
+              onChange={(event) => setProfileName(event.target.value)}
+              placeholder="Aggiungi il tuo nome"
+            />
+          </label>
+          <div className="profile-metrics">
+            <div><strong>{completion}%</strong><span>corso</span></div>
+            <div><strong>{xp}</strong><span>XP</span></div>
+            <div><strong>{state.completed.length}/6</strong><span>moduli</span></div>
+            <div><strong>{state.streakDays}</strong><span>streak</span></div>
+          </div>
+          <div className="profile-progress">
+            <span>Progresso complessivo</span>
+            <strong>{activityDone}/42 attività</strong>
+            <Progress value={completion} aria-label="Progresso complessivo" />
+          </div>
+          <div className="profile-badges">
+            <div className="profile-section-title">
+              <strong>Collectible</strong>
+              <span>{earnedCount}/6 sbloccati</span>
+            </div>
+            <div>
+              {achievements.map((item) => (
+                <button
+                  key={item.id}
+                  className={item.earned(state) ? 'earned' : ''}
+                  onClick={() => {
+                    setShowProfile(false);
+                    setSelectedAchievement(item);
+                  }}
+                >
+                  <img src={item.image} alt="" width={68} height={68} />
+                  <span>{item.name}</span>
+                  <small>{item.rarity}</small>
+                </button>
+              ))}
+            </div>
+          </div>
+          {state.certificateId && (
+            <button
+              className="primary wide-action"
+              onClick={() => {
+                setShowProfile(false);
+                setShowCertificate(true);
+              }}
+            >
+              Apri il certificato <ArrowRight size={18} />
+            </button>
+          )}
+          <p className="local-profile-note">
+            Questo profilo non richiede un account. I dati restano nel browser e non si sincronizzano con altri dispositivi.
+          </p>
+        </DialogContent>
+      </Dialog>
       <Dialog
         open={!!selectedAchievement}
         onOpenChange={(open) => !open && setSelectedAchievement(null)}
@@ -1280,7 +1424,7 @@ export default function Home() {
           <div className="finale-stage">
             <span className="finale-percent">100%</span>
             <img
-              src="/achievements/applied-intelligence.png"
+              src="./achievements/applied-intelligence.png"
               alt="Trofeo Applied Intelligence"
               width={250}
               height={250}
@@ -1350,7 +1494,7 @@ export default function Home() {
               <strong>ai. primo passo</strong>
               <span>CERTIFICATO DI PARTECIPAZIONE</span>
             </div>
-            <img src="/achievements/applied-intelligence.png" alt="" width={105} height={105} />
+            <img src="./achievements/applied-intelligence.png" alt="" width={105} height={105} />
             <small>SI ATTESTA CHE</small>
             <h3>{state.profileName}</h3>
             <p>ha completato il corso online</p>

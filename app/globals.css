@@ -45,7 +45,8 @@ button,
 a,
 textarea,
 label,
-select {
+select,
+input {
   touch-action: manipulation;
 }
 button {
@@ -155,6 +156,26 @@ h2:focus {
   border-left: 1px solid #dfe5ef;
   padding-left: 25px;
 }
+.profile-trigger {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 13px;
+  border: 1px solid #dbe1eb;
+  border-radius: 10px;
+  color: #4e5f7b;
+  background: white;
+  font-size: 13px;
+  font-weight: 700;
+}
+.profile-trigger:hover {
+  background: #f4f6fb;
+}
+.mobile-dashboard,
+.mobile-module-picker {
+  display: none;
+}
 .course-shell {
   max-width: 1280px;
   margin: auto;
@@ -190,6 +211,13 @@ h2:focus {
   max-width: 690px;
   position: relative;
   z-index: 1;
+}
+.course-card-main > div:last-child {
+  min-width: 0;
+}
+.course-card h1,
+.course-promise {
+  overflow-wrap: anywhere;
 }
 .course-index {
   font-size: 13px;
@@ -1168,7 +1196,8 @@ textarea {
 }
 .collectible-dialog,
 .finale-dialog,
-.certificate-dialog {
+.certificate-dialog,
+.profile-dialog {
   max-width: 560px !important;
   max-height: calc(100dvh - 24px);
   overflow-y: auto;
@@ -1181,6 +1210,82 @@ textarea {
   font-size: 22px;
   font-weight: 800;
   color: #17243d;
+}
+.profile-dialog [data-slot='dialog-title'] {
+  font-size: 22px;
+  font-weight: 800;
+  color: #17243d;
+}
+.profile-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.profile-metrics > div {
+  padding: 12px 8px;
+  text-align: center;
+  border: 1px solid #e0e5ee;
+  border-radius: 10px;
+  background: #f7f9fc;
+}
+.profile-metrics strong,
+.profile-metrics span {
+  display: block;
+}
+.profile-metrics strong { font-size: 18px; color: #254ab8; }
+.profile-metrics span { font-size: 9px; color: #79869b; text-transform: uppercase; }
+.profile-progress {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 7px;
+  color: #5c6b83;
+  font-size: 12px;
+}
+.profile-progress strong { color: #243858; }
+.profile-progress [data-slot='progress'] { grid-column: 1 / -1; }
+.profile-section-title {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #61708a;
+  margin-bottom: 8px;
+}
+.profile-badges > div:last-child {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.profile-badges button {
+  min-width: 0;
+  padding: 6px;
+  border: 1px solid #e0e5ee;
+  border-radius: 10px;
+  color: #929bab;
+  background: #f5f6f8;
+}
+.profile-badges button img {
+  display: block;
+  width: 68px;
+  height: 68px;
+  margin: auto;
+  object-fit: contain;
+  filter: grayscale(1);
+  opacity: .25;
+}
+.profile-badges button span,
+.profile-badges button small { display: block; overflow-wrap: anywhere; }
+.profile-badges button span { font-size: 10px; font-weight: 800; }
+.profile-badges button small { font-size: 8px; text-transform: uppercase; }
+.profile-badges button.earned { color: #203e77; background: #f7f9ff; border-color: #cbd6e9; }
+.profile-badges button.earned img { filter: none; opacity: 1; }
+.local-profile-note {
+  margin: 0;
+  padding: 11px 12px;
+  border-radius: 9px;
+  background: #f2f4f7;
+  color: #6f7b8e;
+  font-size: 11px;
+  line-height: 1.45;
 }
 .collectible-preview {
   background: linear-gradient(145deg, #0e1d39, #18366d);
@@ -1438,9 +1543,17 @@ textarea {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .lesson-layout {
-    grid-template-columns: minmax(0, 1fr) 235px;
-    gap: 20px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
   }
+  .mission-aside {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .mission-aside > * { margin-top: 0; min-width: 0; }
+  .mission-card,
+  .achievement-card { grid-row: span 2; }
   .course-shell {
     padding: 25px 22px;
   }
@@ -1467,7 +1580,7 @@ textarea {
   .topbar {
     height: 75px;
     padding: 12px 20px;
-    gap: 16px;
+    gap: 9px;
   }
   .brand {
     font-size: 18px;
@@ -1485,6 +1598,14 @@ textarea {
     padding-left: 0;
     border: 0;
   }
+  .profile-trigger {
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+  }
+  .profile-trigger span { display: none; }
   .download-link span {
     display: none;
   }
@@ -1531,8 +1652,9 @@ textarea {
     padding: 22px 14px;
   }
   .course-card {
-    padding: 25px 21px;
+    padding: 22px 19px;
     border-radius: 15px;
+    width: 100%;
   }
   .course-card-main {
     gap: 13px;
@@ -1541,17 +1663,18 @@ textarea {
     display: none;
   }
   .course-card h1 {
-    font-size: 31px;
+    font-size: 29px;
     letter-spacing: -1.2px;
   }
   .course-promise {
-    font-size: 16px;
+    font-size: 15px;
+    line-height: 1.48;
   }
   .course-meta {
     gap: 10px 16px;
   }
   .course-progress-card {
-    align-items: center;
+    display: none;
   }
   .completion-ring {
     width: 88px;
@@ -1560,17 +1683,109 @@ textarea {
   .completion-ring strong {
     font-size: 21px;
   }
-  .section-heading {
+  .mobile-dashboard {
     display: block;
-    margin-top: 28px;
+    margin-top: 12px;
+    padding: 16px;
+    border: 1px solid #dce3ee;
+    border-radius: 14px;
+    background: white;
+    box-shadow: 0 7px 22px rgba(28,48,86,.06);
   }
-  .section-heading > p {
-    margin-top: 5px;
+  .mobile-dashboard-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
   }
+  .mobile-dashboard-head > div { min-width: 0; }
+  .mobile-dashboard-head strong,
+  .mobile-dashboard-head small { display: block; }
+  .mobile-dashboard-head strong {
+    margin: 2px 0;
+    font-size: 17px;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mobile-dashboard-head small { color: #6f7d93; font-size: 11px; }
+  .mobile-dashboard > [data-slot='progress'] { margin: 13px 0 12px; }
+  .mobile-achievement-strip {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 5px;
+  }
+  .mobile-achievement-strip button {
+    min-width: 0;
+    min-height: 64px;
+    padding: 3px;
+    border: 0;
+    border-radius: 9px;
+    background: #f2f4f7;
+    color: #98a1b0;
+  }
+  .mobile-achievement-strip img {
+    display: block;
+    width: 44px;
+    height: 44px;
+    margin: -2px auto -4px;
+    object-fit: contain;
+    filter: grayscale(1);
+    opacity: .23;
+  }
+  .mobile-achievement-strip button.earned { color: #284678; background: #f1f5fd; }
+  .mobile-achievement-strip button.earned img { filter: none; opacity: 1; }
+  .mobile-achievement-strip span { display: block; font-size: 7px; line-height: 1.15; overflow-wrap: anywhere; }
+  .mobile-achievement-strip .all-achievements strong { display: block; color: #3154c8; font-size: 16px; }
+  .mobile-dashboard > p { margin: 10px 0 0; color: #78859a; font-size: 10px; text-align: center; }
+  .section-heading { display: none; }
+  .mobile-module-picker {
+    display: block;
+    margin: 12px 0;
+    border: 1px solid #dce3ee;
+    border-radius: 13px;
+    background: white;
+    overflow: hidden;
+  }
+  .mobile-module-picker summary {
+    min-height: 64px;
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    list-style: none;
+    cursor: pointer;
+  }
+  .mobile-module-picker summary::-webkit-details-marker { display: none; }
+  .mobile-module-picker summary span { min-width: 0; }
+  .mobile-module-picker summary small,
+  .mobile-module-picker summary strong { display: block; }
+  .mobile-module-picker summary small { color: #71819e; font-size: 8px; letter-spacing: .1em; }
+  .mobile-module-picker summary strong { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mobile-module-picker summary em { color: #3154c8; font-size: 12px; font-style: normal; font-weight: 800; }
+  .mobile-module-picker > div { padding: 0 8px 8px; }
+  .mobile-module-picker > div button {
+    width: 100%;
+    min-height: 48px;
+    display: grid;
+    grid-template-columns: 32px 1fr auto;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 9px;
+    border: 0;
+    border-top: 1px solid #edf0f5;
+    color: #53617a;
+    background: white;
+    text-align: left;
+  }
+  .mobile-module-picker > div button.active { color: #2448b5; background: #f4f7ff; }
+  .mobile-module-picker > div button > span { font-size: 10px; font-weight: 800; }
+  .mobile-module-picker > div button > strong { font-size: 12px; }
+  .mobile-module-picker > div button > small { font-size: 9px; }
   .level-map {
-    grid-template-columns: 1fr;
-    gap: 10px;
-    margin-bottom: 24px;
+    display: none;
   }
   .node-number {
     width: 36px;
@@ -1588,8 +1803,18 @@ textarea {
     display: block;
   }
   .mission-aside {
-    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
   }
+  .achievement-card { order: 1; }
+  .points-card { order: 2; }
+  .streak-card { order: 3; }
+  .certificate-shortcut { order: 4; }
+  .mission-card { order: 5; }
+  .reference { order: 6; }
+  .mission-aside > .quiet { order: 7; }
+  .storage-note { order: 8; }
   .activity {
     padding: 24px 20px;
     min-height: 0;
@@ -1610,6 +1835,10 @@ textarea {
   .activity-footer {
     padding: 18px 20px;
     gap: 12px;
+    position: sticky;
+    bottom: 0;
+    z-index: 8;
+    box-shadow: 0 -8px 24px rgba(25,42,72,.08);
   }
   .primary {
     font-size: 14px;
@@ -1628,7 +1857,8 @@ textarea {
   .badge-art img { width: 84px; height: 84px; }
   .collectible-dialog,
   .finale-dialog,
-  .certificate-dialog {
+  .certificate-dialog,
+  .profile-dialog {
     width: calc(100% - 16px) !important;
     max-width: none !important;
     max-height: calc(100dvh - 16px);
@@ -1641,6 +1871,9 @@ textarea {
   .certificate-preview img { width: 82px; height: 82px; }
   .certificate-preview h3 { font-size: 19px; }
   .certificate-preview h4 { font-size: 14px; }
+  .profile-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+  .profile-metrics > div { padding: 10px 3px; }
+  .profile-badges > div:last-child { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .mission-list {
     display: flex;
     gap: 16px;
@@ -1668,6 +1901,11 @@ textarea {
   .node-label {
     overflow-wrap: anywhere;
   }
+}
+@media (max-width: 520px) {
+  .streak-pill { display: none; }
+  .brand { margin-right: auto; }
+  .scoreboard { margin-left: 0; }
 }
 @media (max-width: 390px) {
   .topbar { padding-inline: 12px; }

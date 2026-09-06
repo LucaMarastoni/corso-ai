@@ -4,24 +4,21 @@ import {
   AppHeader,
   CourseHeroCard,
   ProfileContent,
-  AcademyButton,
-  AcademyCard,
-  SectionHeader,
   BottomNavigation,
   ProgressSummary,
   JourneyCard,
   ObjectiveCard,
-  StreakCard,
-  BadgeTile,
-  CertificateCard,
   LessonHeader,
-  LessonBlock,
-  InsightCard,
   type Screen,
 } from '../components/academy';
-import { Progress } from '@/components/ui/progress';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Checkbox } from '@/components/ui/checkbox';
+import {
+  LearningExperience,
+  ProgressProfile,
+  LevelCard,
+  NextMilestone,
+} from '../components/learning';
+import { courseModules, competencyDefinitions } from './learning-model';
+import { learningLevel } from './learning-config';
 import {
   Dialog,
   DialogContent,
@@ -30,21 +27,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  ArrowLeft,
   ArrowRight,
   Check,
   Lock,
   Pause,
   Play,
   Square,
-  Star,
-  BookOpen,
-  Lightbulb,
-  Flag,
   Download,
-  Sparkles,
-  Flame,
-  Target,
   Share2,
 } from 'lucide-react';
 import { levels } from './journey';
@@ -53,17 +42,16 @@ import {
   initialState,
   score,
   unlock,
-  award,
-  canFinish,
-  complete,
   restore,
-  keyFor,
   type LearningState,
   completionPercent,
-  touchStudy,
+  STORE,
+  LEGACY_STORE,
+  serialize,
+  completedActivityCount,
+  activityAvailable,
   issueCertificate,
 } from './progress';
-const STORE = 'ai-course-journey-v2';
 const levelOutcomes = [
   'Riconosci dove l’AI può aiutarti e dove serve ancora il tuo giudizio.',
   'Trasforma un’idea vaga in una consegna chiara e verificabile.',
@@ -129,16 +117,10 @@ function saveBlob(blob: Blob, name: string) {
 }
 export default function Home() {
   const [screen, setScreen] = useState<Screen>('home');
-  const [allBadges, setAllBadges] = useState(false);
   const [state, setState] = useState<LearningState>(initialState),
     [ready, setReady] = useState(false),
     [storage, setStorage] = useState(true);
-  const [choice, setChoice] = useState(''),
-    [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null),
-    [hint, setHint] = useState(false),
-    [solution, setSolution] = useState(false),
-    [celebrate, setCelebrate] = useState(false),
-    [selectedAchievement, setSelectedAchievement] =
+  const [selectedAchievement, setSelectedAchievement] =
       useState<Achievement | null>(null),
     [showProfile, setShowProfile] = useState(false),
     [showCertificate, setShowCertificate] = useState(false),
@@ -151,20 +133,16 @@ export default function Home() {
     ),
     [audioError, setAudioError] = useState(''),
     [supported, setSupported] = useState(false),
-    [segment, setSegment] = useState(-1);
+    [_segment, setSegment] = useState(-1);
   const startWatch = useRef<ReturnType<typeof setTimeout> | null>(null);
   const audioRun = useRef(0),
     utterance = useRef<SpeechSynthesisUtterance | null>(null),
-    heading = useRef<HTMLHeadingElement>(null),
     navTriggered = useRef(false);
   const l = state.level,
     step = state.step,
     level = levels[l],
     xp = score(state),
-    slide = step < 3 ? level.slides[step] : null,
-    challenge = step >= 3 && step < 6 ? level.challenges[step - 3] : null,
-    id = keyFor(l, step - 3),
-    solved = state.solved.includes(id),
+    slide = courseModules[l].activities[step]?.slide || null,
     finished = state.completed.length === 6;
   const stop = useCallback(() => {
     audioRun.current++;
@@ -198,8 +176,18 @@ export default function Home() {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORE);
-      const today = new Date().toLocaleDateString('en-CA');
-      setState(touchStudy(raw ? restore(raw) : initialState, today));
+      let source = raw || localStorage.getItem(LEGACY_STORE);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed))
+            throw new Error('Stato non valido');
+        } catch {
+          localStorage.setItem(`${STORE}-recovery`, raw);
+          source = localStorage.getItem(LEGACY_STORE);
+        }
+      }
+      setState(source ? restore(source) : initialState);
     } catch {
       setStorage(false);
     }
@@ -208,7 +196,7 @@ export default function Home() {
   useEffect(() => {
     if (!ready) return;
     try {
-      localStorage.setItem(STORE, JSON.stringify(state));
+      localStorage.setItem(STORE, serialize(state));
     } catch {
       setStorage(false);
     }
@@ -236,22 +224,8 @@ export default function Home() {
   useEffect(() => {
     stop();
     setAudioError('');
-    setChoice('');
-    setFeedback(null);
-    setHint(false);
-    setSolution(false);
-    setCelebrate(false);
-    if (
-      ready &&
-      step < 3 &&
-      (screen === 'lesson' || window.matchMedia('(min-width: 769px)').matches)
-    )
-      setState((s) => ({
-        ...s,
-        seen: [...new Set([...s.seen, keyFor(l, step)])],
-      }));
     if (navTriggered.current) {
-      heading.current?.focus();
+      document.querySelector<HTMLElement>('.learning-activity h1')?.focus();
       navTriggered.current = false;
     }
   }, [l, step, ready, stop, screen]);
@@ -304,12 +278,29 @@ export default function Home() {
     return () => lifecycle.abort();
   }, []);
   function navigate(levelIndex: number, nextStep = 0) {
-    if (!ready || levelIndex > unlock(state)) return;
+    const activity = courseModules[levelIndex]?.activities[nextStep];
+    if (!ready || !activity || !activityAvailable(state, levelIndex, activity))
+      return;
     stop();
     if (window.matchMedia('(max-width: 768px)').matches)
       window.location.hash = 'lesson';
     navTriggered.current = true;
     setState((s) => ({ ...s, level: levelIndex, step: nextStep }));
+  }
+  function resumeCourse() {
+    const current = courseModules[l].activities[step];
+    if (!Object.hasOwn(state.completedActivities, current.id))
+      return navigate(l, step);
+    const nextModule = unlock(state);
+    const nextStep = courseModules[nextModule].activities.findIndex(
+      (activity) =>
+        !Object.hasOwn(state.completedActivities, activity.id) &&
+        activityAvailable(state, nextModule, activity),
+    );
+    navigate(
+      nextModule,
+      nextStep < 0 ? courseModules[nextModule].activities.length - 1 : nextStep,
+    );
   }
   function listen() {
     if (!slide || !supported) return;
@@ -380,17 +371,11 @@ export default function Home() {
     setAudioState('playing');
     say(0);
   }
-  function verify() {
-    if (!challenge || !choice || solved) return;
-    const correct = Number(choice) === challenge.correct;
-    setFeedback(correct ? 'correct' : 'wrong');
-    if (correct) setState((s) => award(s, id));
-  }
   function download() {
     const text = levels
       .map(
         (x, n) =>
-          `LIVELLO ${n + 1}: ${x.title}\n${x.lab}\n\nIL MIO LAVORO\n${state.notes[n] || '(non ancora svolto)'}`,
+          `LIVELLO ${n + 1}: ${x.title}\n${x.lab}\n\nIL MIO LAVORO\n${state.notes[n] || '(non ancora svolto)'}\n\nPROVA\n${state.drafts[`module-${n + 1}:practice`] || '(non ancora svolta)'}`,
       )
       .join('\n\n---\n\n');
     const u = URL.createObjectURL(
@@ -416,17 +401,6 @@ export default function Home() {
       current.completionDate || date,
       certificateId,
     );
-  }
-  function completeCurrentLevel() {
-    if (l < 5) {
-      setState((current) => complete(current, l));
-      setCelebrate(true);
-      return;
-    }
-    if (state.profileName.trim().length < 3) return;
-    setState((current) => issueCompletedCertificate(complete(current, l)));
-    setCelebrate(true);
-    setShowFinale(true);
   }
   async function createSocialCard(item: Achievement) {
     const canvas = document.createElement('canvas');
@@ -550,39 +524,27 @@ export default function Home() {
     context.fillStyle = '#7b6847';
     context.font = '700 22px Inter, sans-serif';
     context.fillText('CERTIFICATO DI PARTECIPAZIONE', 1685, 145);
-    const image = await loadCanvasImage(
-      './achievements/applied-intelligence.png',
-    );
-    context.drawImage(image, 720, 155, 360, 360);
     context.textAlign = 'center';
-    context.fillStyle = '#8d7444';
-    context.font = '700 22px Inter, sans-serif';
-    context.fillText('SI ATTESTA CHE', 900, 555);
     context.fillStyle = '#14294f';
-    context.font = '800 68px Inter, sans-serif';
-    context.fillText(state.profileName.trim(), 900, 650);
-    context.strokeStyle = '#d6c7aa';
-    context.beginPath();
-    context.moveTo(390, 685);
-    context.lineTo(1410, 685);
-    context.stroke();
-    context.fillStyle = '#52627d';
-    context.font = '400 30px Inter, sans-serif';
-    context.fillText('ha completato il corso online di 60 minuti', 900, 755);
-    context.fillStyle = '#14294f';
-    context.font = '800 47px Inter, sans-serif';
-    context.fillText('Basi di Intelligenza Artificiale', 900, 825);
-    context.fillStyle = '#52627d';
+    context.font = '700 24px Inter, sans-serif';
+    context.fillText('SI ATTESTA CHE', 900, 250);
+    context.font = '700 54px Inter, sans-serif';
+    writeWrapped(context, state.profileName.trim(), 900, 340, 1450, 64);
+    context.font = '400 28px Inter, sans-serif';
+    context.fillText('ha completato il corso', 900, 480);
+    context.font = '700 42px Inter, sans-serif';
+    context.fillText('Basi di Intelligenza Artificiale', 900, 545);
+    context.font = '700 24px Inter, sans-serif';
+    context.fillText('COMPETENZE ACQUISITE', 900, 630);
     context.font = '400 27px Inter, sans-serif';
-    const date = new Intl.DateTimeFormat('it-IT', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    }).format(new Date(`${state.completionDate}T12:00:00`));
+    competencyDefinitions
+      .filter((item) => Object.hasOwn(state.competencyAwards, item.id))
+      .forEach((item, i) => context.fillText(item.name, 900, 690 + i * 43));
+    context.font = '400 22px Inter, sans-serif';
     context.fillText(
-      `Completato il ${date} · 6 moduli · 42 attività · 600 XP`,
+      `Completato il ${state.completionDate} · ${state.completed.length} moduli`,
       900,
-      885,
+      1000,
     );
     context.textAlign = 'left';
     context.fillStyle = '#7b6847';
@@ -613,9 +575,7 @@ export default function Home() {
   }
   const unlocked = unlock(state);
   const completion = completionPercent(state);
-  const activityDone =
-    state.seen.length + state.solved.length + state.completed.length;
-  const earnedCount = achievements.filter((item) => item.earned(state)).length;
+  const activityDone = completedActivityCount(state);
   const nextMilestone = achievements.find((item) => !item.earned(state));
   return (
     <div className="academy-app" data-screen={screen}>
@@ -624,7 +584,15 @@ export default function Home() {
         streakDays={state.streakDays}
         onProfile={() => setShowProfile(true)}
       />
-      <LessonHeader module={l + 1} step={step} />
+      <LessonHeader
+        module={l + 1}
+        step={step}
+        completed={
+          courseModules[l].activities.filter((a) =>
+            Object.hasOwn(state.completedActivities, a.id),
+          ).length
+        }
+      />
       <main className="course-shell">
         <section className="home-intro mobile-only" aria-label="Benvenuto">
           <p className="eyebrow">IL TUO PROSSIMO PASSO</p>
@@ -644,7 +612,7 @@ export default function Home() {
           moduleNumber={l + 1}
           finished={finished}
           ready={ready}
-          onContinue={() => navigate(l, step)}
+          onContinue={resumeCourse}
         />
         <section
           className="home-next mobile-only"
@@ -665,78 +633,19 @@ export default function Home() {
         </section>
         <section
           className="progress-screen mobile-only"
-          aria-labelledby="progress-title"
+          aria-label="Profilo formativo"
         >
-          <p className="eyebrow">UN PASSO ALLA VOLTA</p>
-          <h1 id="progress-title">I tuoi progressi</h1>
-          <AcademyCard className="progress-overview">
-            <strong className="progress-display">
-              {completion}
-              <span>%</span>
-            </strong>
-            <p>del corso completato</p>
-            <Progress value={completion} aria-label="Completamento del corso" />
-            <div className="overview-metrics">
-              <div>
-                <strong>{state.completed.length}/6</strong>
-                <span>Moduli</span>
-              </div>
-              <div>
-                <strong>{activityDone}/42</strong>
-                <span>Attività</span>
-              </div>
-              <div>
-                <strong>60 min</strong>
-                <span>Tempo stimato</span>
-              </div>
-            </div>
-          </AcademyCard>
-          <StreakCard days={state.streakDays} />
-          {nextMilestone && (
-            <AcademyCard tone="highlight">
-              <span className="eyebrow">PROSSIMO TRAGUARDO</span>
-              <h2>{nextMilestone.name}</h2>
-              <p>{nextMilestone.criterion}</p>
-              <AcademyButton
-                variant="ghost"
-                onClick={() => setSelectedAchievement(nextMilestone)}
-              >
-                Scopri il badge
-                <ArrowRight size={16} />
-              </AcademyButton>
-            </AcademyCard>
-          )}
-          <SectionHeader title="I tuoi badge" />
-          <div className="academy-badges">
-            {achievements
-              .slice(0, allBadges ? achievements.length : 3)
-              .map((item) => (
-                <BadgeTile
-                  key={item.id}
-                  item={item}
-                  state={state}
-                  onSelect={setSelectedAchievement}
-                />
-              ))}
-          </div>
-          <AcademyButton
-            variant="ghost"
-            aria-expanded={allBadges}
-            onClick={() => setAllBadges(!allBadges)}
-          >
-            {allBadges
-              ? 'Mostra meno'
-              : `Vedi tutti i badge (${earnedCount}/6)`}
-            <ArrowRight size={16} />
-          </AcademyButton>
-          <CertificateCard
-            available={!!state.certificateId}
-            onOpen={() => setShowCertificate(true)}
+          <ProgressProfile
+            state={state}
+            onContinue={resumeCourse}
+            onAchievement={setSelectedAchievement}
+            onCertificate={() =>
+              state.certificateId
+                ? setShowCertificate(true)
+                : setShowFinale(true)
+            }
+            onDownloadCertificate={downloadCertificate}
           />
-          <AcademyButton onClick={() => navigate(l, step)}>
-            Continua il percorso
-            <ArrowRight size={18} />
-          </AcademyButton>
         </section>
         <section
           className="profile-screen mobile-only"
@@ -747,7 +656,7 @@ export default function Home() {
           <ProfileContent
             state={state}
             xp={xp}
-            level={unlocked + 1}
+            level={learningLevel(xp).current.level}
             achievements={achievements}
             storage={storage}
             onName={setProfileName}
@@ -797,12 +706,14 @@ export default function Home() {
               <span className="node-label">{x.title}</span>
               <span className="node-outcome">{levelOutcomes[n]}</span>
               <span className="module-foot">
-                <span>7 attività</span>
+                <span>
+                  {courseModules[n].activities.length} attività · 5 fasi
+                </span>
                 <span>
                   {state.completed.includes(n)
                     ? '100%'
                     : n === l
-                      ? `${Math.round(((step + 1) / 7) * 100)}%`
+                      ? `${Math.round((courseModules[n].activities.filter((a) => Object.hasOwn(state.completedActivities, a.id)).length / courseModules[n].activities.length) * 100)}%`
                       : '0%'}
                 </span>
               </span>
@@ -810,529 +721,103 @@ export default function Home() {
           ))}
         </nav>
         <div className="lesson-layout">
-          <article className="lesson-panel">
-            <div className="panel-top">
-              <span className="eyebrow">
-                LIVELLO {l + 1} · {level.tag}
-              </span>
-              <span>
-                {step < 3 ? 'IMPARA' : step < 6 ? 'SCEGLI' : 'CREA'}{' '}
-                <b>{step + 1}/7</b>
-              </span>
-            </div>
-            <Progress
-              value={((step + 1) / 7) * 100}
-              aria-label="Posizione nel livello"
-            />
-            <div key={`${l}-${step}`} className="activity enter">
-              <div className="activity-label">
-                {slide ? (
-                  <>
-                    <BookOpen size={16} /> AI · {level.tag}
-                  </>
-                ) : challenge ? (
-                  <>
-                    <Sparkles size={16} /> SFIDA {step - 2} DI 3 · 20 PUNTI
-                  </>
-                ) : (
-                  <>
-                    <Flag size={16} /> LABORATORIO · 40 PUNTI
-                  </>
-                )}
-              </div>
-              <h2 ref={heading} tabIndex={-1}>
-                {slide
-                  ? slide.title
-                  : challenge
-                    ? 'Quale prompt funziona meglio?'
-                    : 'Adesso lo crei tu.'}
-              </h2>
-              {slide && (
-                <>
-                  <div className="slide-steps">
-                    {slide.steps.map((text, i) => (
-                      <LessonBlock
-                        key={text}
-                        number={i + 1}
-                        speaking={segment === i + 1}
-                      >
-                        {text}
-                      </LessonBlock>
-                    ))}
-                  </div>
-                  <InsightCard speaking={segment === 4}>
-                    {slide.takeaway}
-                  </InsightCard>
-                  <div className="audio-controls">
+          <LearningExperience
+            state={state}
+            ready={ready}
+            onChange={setState}
+            onNavigate={navigate}
+            onCertificate={() =>
+              state.certificateId
+                ? setShowCertificate(true)
+                : setShowFinale(true)
+            }
+            audio={
+              <>
+                <div className="audio-controls">
+                  <button
+                    className="audio-button"
+                    onClick={listen}
+                    disabled={!supported || !ready}
+                  >
+                    {audioState === 'playing' ? (
+                      <Pause size={18} />
+                    ) : (
+                      <Play size={18} fill="currentColor" />
+                    )}
+                    {audioState === 'playing'
+                      ? 'Pausa'
+                      : audioState === 'paused'
+                        ? 'Riprendi'
+                        : 'Ascolta la slide'}
+                  </button>
+                  {audioState !== 'idle' && (
                     <button
-                      className="audio-button"
-                      onClick={listen}
-                      disabled={!supported || !ready}
+                      className="icon-button"
+                      onClick={stop}
+                      aria-label="Interrompi audio"
                     >
-                      {audioState === 'playing' ? (
-                        <Pause size={18} />
-                      ) : (
-                        <Play size={18} fill="currentColor" />
-                      )}
-                      {audioState === 'playing'
-                        ? 'Pausa'
-                        : audioState === 'paused'
-                          ? 'Riprendi'
-                          : 'Ascolta la slide'}
+                      <Square size={17} />
                     </button>
-                    {audioState !== 'idle' && (
-                      <button
-                        className="icon-button"
-                        onClick={stop}
-                        aria-label="Interrompi audio"
+                  )}
+                  <span className="audio-caption">
+                    Testo completo sempre visibile
+                  </span>
+                </div>
+                <details className="audio-settings">
+                  <summary>Voce e accessibilità</summary>
+                  <p>
+                    Voce sintetica del browser, senza abbonamenti. Qualità e
+                    disponibilità dipendono dal dispositivo. L’audio parte
+                    soltanto quando lo richiedi.
+                  </p>
+                  {voices.length > 0 && (
+                    <label>
+                      Voce italiana{' '}
+                      <select
+                        value={voice || voices[0].voiceURI}
+                        onChange={(e) => {
+                          stop();
+                          setVoice(e.target.value);
+                        }}
                       >
-                        <Square size={17} />
-                      </button>
-                    )}
-                    <span className="audio-caption">
-                      Testo completo sempre visibile
-                    </span>
-                  </div>
-                  <details className="audio-settings">
-                    <summary>Voce e accessibilità</summary>
+                        {voices.map((v) => (
+                          <option value={v.voiceURI} key={v.voiceURI}>
+                            {v.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                  {!supported && ready && (
                     <p>
-                      Voce sintetica del browser, senza abbonamenti. Qualità e
-                      disponibilità dipendono dal dispositivo. L’audio parte
-                      soltanto quando lo richiedi.
+                      Questo browser non supporta la lettura audio: puoi
+                      completare il corso leggendo tutte le slide.
                     </p>
-                    {voices.length > 0 && (
-                      <label>
-                        Voce italiana{' '}
-                        <select
-                          value={voice || voices[0].voiceURI}
-                          onChange={(e) => {
-                            stop();
-                            setVoice(e.target.value);
-                          }}
-                        >
-                          {voices.map((v) => (
-                            <option value={v.voiceURI} key={v.voiceURI}>
-                              {v.name}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    )}
-                    {!supported && ready && (
-                      <p>
-                        Questo browser non supporta la lettura audio: puoi
-                        completare il corso leggendo tutte le slide.
-                      </p>
-                    )}
-                    <a
-                      href="https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Informazioni sulla lettura del browser
-                    </a>
-                  </details>
-                  <p role="status" className="audio-error">
-                    {audioError}
-                  </p>
-                </>
-              )}
-              {challenge && (
-                <>
-                  <p className="scenario">{challenge.goal}</p>
-                  <RadioGroup
-                    value={choice}
-                    onValueChange={(v) => {
-                      if (!solved) {
-                        setChoice(String(v));
-                        setFeedback(null);
-                      }
-                    }}
-                    aria-label="Scegli il prompt più adatto"
-                    className="prompt-options"
+                  )}
+                  <a
+                    href="https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis"
+                    target="_blank"
+                    rel="noreferrer"
                   >
-                    {challenge.options.map((text, i) => (
-                      <label
-                        key={text}
-                        className={`prompt-card ${choice === String(i) ? 'chosen' : ''} ${solved && challenge.correct === i ? 'right-answer' : ''}`}
-                      >
-                        <div className="prompt-top">
-                          <span>PROMPT {i === 0 ? 'A' : 'B'}</span>
-                          <RadioGroupItem value={String(i)} disabled={solved} />
-                        </div>
-                        <p>“{text}”</p>
-                        {solved && challenge.correct === i && (
-                          <span className="correct-tag">
-                            <Check size={16} /> Il più adatto al compito
-                          </span>
-                        )}
-                      </label>
-                    ))}
-                  </RadioGroup>
-                  <div aria-live="polite">
-                    {(feedback || solved) && (
-                      <div
-                        className={'feedback ' + (solved ? 'success' : 'retry')}
-                      >
-                        <strong>
-                          {solved
-                            ? feedback === 'correct'
-                              ? 'Competenza acquisita · +20 XP'
-                              : 'Sfida già risolta · 20 XP conquistati'
-                            : 'Ci sei quasi. Prova l’altro prompt.'}
-                        </strong>
-                        <p>{solved ? challenge.why : challenge.hint}</p>
-                      </div>
-                    )}
-                  </div>
-                  {!solved && (
-                    <div className="challenge-actions">
-                      <button className="quiet" onClick={() => setHint(!hint)}>
-                        <Lightbulb size={17} />{' '}
-                        {hint ? 'Nascondi indizio' : 'Un piccolo indizio'}
-                      </button>
-                      <button
-                        className="primary"
-                        onClick={verify}
-                        disabled={!choice}
-                      >
-                        Controlla <Check size={18} />
-                      </button>
-                    </div>
-                  )}
-                  {hint && !solved && <p className="hint">{challenge.hint}</p>}
-                  <p className="micro-note">
-                    Scegli in base all’obiettivo: un prompt può essere valido
-                    per un compito e poco adatto a un altro.
-                  </p>
-                </>
-              )}
-              {step === 6 && (
-                <>
-                  <p className="scenario">{level.lab}</p>
-                  <div className="lab-meta">
-                    <span>◷ 4 minuti indicativi</span>
-                    <span>Quaderno personale · nessuna AI collegata</span>
-                  </div>
-                  {l === 5 && !state.completed.includes(5) && (
-                    <div className="identity-field">
-                      <label htmlFor="profile-name">
-                        Nome e cognome sul certificato
-                      </label>
-                      <input
-                        id="profile-name"
-                        value={state.profileName}
-                        maxLength={80}
-                        autoComplete="name"
-                        onChange={(event) => setProfileName(event.target.value)}
-                        placeholder="Es. Luca Bianchi"
-                      />
-                      <small>
-                        Controlla l’ortografia: questo nome apparirà anche sulle
-                        card social.
-                      </small>
-                    </div>
-                  )}
-                  <label className="field-label" htmlFor="work">
-                    Il tuo lavoro
-                  </label>
-                  <textarea
-                    id="work"
-                    maxLength={20000}
-                    value={state.notes[l] || ''}
-                    onChange={(e) =>
-                      setState((s) => ({
-                        ...s,
-                        notes: { ...s.notes, [l]: e.target.value },
-                      }))
-                    }
-                    placeholder="Scrivi il prompt e le tue osservazioni. Usa solo dati inventati…"
-                  />
-                  <button
-                    className="quiet solution-button"
-                    onClick={() => setSolution(!solution)}
-                  >
-                    {solution ? 'Nascondi esempio' : 'Confronta con un esempio'}{' '}
-                    <BookOpen size={17} />
-                  </button>
-                  {solution && (
-                    <div className="model-answer">
-                      <strong>Una possibile soluzione</strong>
-                      <p>{level.model}</p>
-                      <small>
-                        La tua formulazione può essere diversa: usa i criteri
-                        qui sotto.
-                      </small>
-                    </div>
-                  )}
-                  <div className="self-check">
-                    <h3>Controlla il tuo lavoro</h3>
-                    <p>
-                      Spunta solo ciò che hai verificato. È un’autovalutazione,
-                      non una correzione automatica.
-                    </p>
-                    {level.criteria.map((c, i) => (
-                      <label key={c}>
-                        <Checkbox
-                          checked={(state.checks[l] || []).includes(i)}
-                          onCheckedChange={(checked) =>
-                            setState((s) => ({
-                              ...s,
-                              checks: {
-                                ...s.checks,
-                                [l]: checked
-                                  ? [...new Set([...(s.checks[l] || []), i])]
-                                  : (s.checks[l] || []).filter((n) => n !== i),
-                              },
-                            }))
-                          }
-                        />
-                        <span>{c}</span>
-                      </label>
-                    ))}
-                  </div>
-                  {!canFinish(state, l) && !state.completed.includes(l) && (
-                    <p className="micro-note">
-                      Per completare: visita le 3 slide, risolvi le 3 sfide,
-                      scrivi almeno 30 caratteri e verifica i 3 criteri. La
-                      lunghezza non valuta la qualità del testo.
-                    </p>
-                  )}
-                  {celebrate && (
-                    <div className="celebration" role="status">
-                      <img
-                        src={
-                          finished
-                            ? './achievements/applied-intelligence.png'
-                            : './achievements/signal-frame.png'
-                        }
-                        alt=""
-                        width={100}
-                        height={100}
-                      />
-                      <h3>
-                        {finished
-                          ? 'Missione compiuta!'
-                          : 'Livello conquistato!'}
-                      </h3>
-                      <p>
-                        {finished
-                          ? 'Hai concluso sei moduli e conquistato 600 XP. Porta con te il metodo: richiesta, revisione, controllo.'
-                          : `Hai conquistato 40 XP. Il modulo ${l + 2} è ora disponibile.`}
-                      </p>
-                      {finished && (
-                        <button className="quiet" onClick={download}>
-                          <Download size={18} /> Scarica il tuo lavoro
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-            <footer className="activity-footer">
-              <button
-                className="quiet"
-                onClick={() => navigate(l, step - 1)}
-                disabled={step === 0 || !ready}
-              >
-                <ArrowLeft size={17} /> Indietro
-              </button>
-              {step < 6 ? (
-                <button
-                  className={challenge && !solved ? 'quiet' : 'primary'}
-                  disabled={!ready || (!!challenge && !solved)}
-                  onClick={() => navigate(l, step + 1)}
-                >
-                  {step === 2
-                    ? 'Inizia le sfide'
-                    : step === 5
-                      ? 'Vai al laboratorio'
-                      : 'Continua'}
-                  <ArrowRight size={18} />
-                </button>
-              ) : !state.completed.includes(l) ? (
-                <button
-                  className="primary"
-                  disabled={
-                    !canFinish(state, l) ||
-                    (l === 5 && state.profileName.trim().length < 3)
-                  }
-                  onClick={completeCurrentLevel}
-                >
-                  <Flag size={18} /> Completa il livello
-                </button>
-              ) : l < 5 ? (
-                <button className="primary" onClick={() => navigate(l + 1)}>
-                  Prossimo livello
-                  <ArrowRight size={18} />
-                </button>
-              ) : (
-                <button className="primary" onClick={() => setShowFinale(true)}>
-                  Vedi il traguardo
-                  <ArrowRight size={18} />
-                </button>
-              )}
-            </footer>
-            <nav className="step-nav" aria-label="Attività del livello">
-              {Array.from({ length: 7 }, (_, i) => (
-                <button
-                  key={i}
-                  aria-label={
-                    i < 3
-                      ? `Slide ${i + 1}`
-                      : i < 6
-                        ? `Sfida ${i - 2}`
-                        : 'Laboratorio'
-                  }
-                  aria-current={step === i ? 'step' : undefined}
-                  className={step === i ? 'current' : ''}
-                  onClick={() => navigate(l, i)}
-                  disabled={!ready}
-                >
-                  {i < 3 ? (
-                    <BookOpen size={14} />
-                  ) : i < 6 ? (
-                    <Sparkles size={14} />
-                  ) : (
-                    <Flag size={14} />
-                  )}
-                </button>
-              ))}
-            </nav>
-            <details className="reference lesson-reference">
-              <summary>Il brief di Officina Pedale</summary>
-              <p>
-                Attività inventata. Ripara bici urbane, esegue manutenzione
-                freni, sostituisce camere d’aria. Appuntamenti tramite modulo di
-                contatto. Prezzi, orari, indirizzo e tempi non disponibili.
-              </p>
-            </details>
-          </article>
-          <aside className="mission-aside">
-            <div className="mission-card">
-              <span className="eyebrow">LA TUA MISSIONE</span>
-              <h3>{level.title}</h3>
-              <p>{level.goal}</p>
-              <div className="mission-list">
-                <div>
-                  <span>01</span>
-                  <p>
-                    Ascolta e scopri
-                    <small>3 slide · circa 3 min con ripasso</small>
-                  </p>
-                </div>
-                <div>
-                  <span>02</span>
-                  <p>
-                    Confronta i prompt
-                    <small>3 sfide · circa 3 min con feedback</small>
-                  </p>
-                </div>
-                <div>
-                  <span>03</span>
-                  <p>
-                    Metti in pratica<small>1 laboratorio · circa 4 min</small>
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="points-card">
-              <Star size={23} fill="currentColor" />
-              <div>
-                <span className="eyebrow">PROFILO DI APPRENDIMENTO</span>
-                <strong>{xp} / 600 XP</strong>
-                <Progress value={xp / 6} aria-label="Punti del corso" />
-                <p>
-                  {completion}% del corso · {state.completed.length}/6 moduli
+                    Informazioni sulla lettura del browser
+                  </a>
+                </details>
+                <p role="status" className="audio-error">
+                  {audioError}
                 </p>
-              </div>
-            </div>
-            <div className="milestone-card">
-              <div className="milestone-icon">
-                <Target size={19} />
-              </div>
-              <div>
-                <span>PROSSIMO TRAGUARDO</span>
-                <strong>
-                  {nextMilestone?.name || 'Tutti i traguardi raggiunti'}
-                </strong>
-                <small>
-                  {nextMilestone?.criterion ||
-                    'Hai completato il percorso professionale.'}
-                </small>
-              </div>
-            </div>
-            <section
-              className="achievement-card"
-              aria-labelledby="achievement-title"
-            >
-              <div className="achievement-heading">
-                <div>
-                  <span className="eyebrow">ACHIEVEMENT</span>
-                  <h3 id="achievement-title">Competenze sbloccate</h3>
-                </div>
-                <strong>{earnedCount}/6</strong>
-              </div>
-              <div className="badge-grid">
-                {achievements.map((item) => (
-                  <button
-                    className={`badge-item ${item.earned(state) ? 'earned' : ''}`}
-                    key={item.id}
-                    onClick={() => {
-                      setShareStatus('');
-                      setSelectedAchievement(item);
-                    }}
-                    aria-label={`${item.name}, ${item.earned(state) ? 'sbloccato' : 'bloccato'}`}
-                  >
-                    <span className="badge-art">
-                      <img src={item.image} alt="" width={84} height={84} />
-                    </span>
-                    <small>{item.name}</small>
-                    <em>{item.rarity}</em>
-                  </button>
-                ))}
-              </div>
-            </section>
-            {finished && state.certificateId && (
-              <button
-                className="certificate-shortcut"
-                onClick={() => setShowCertificate(true)}
-              >
-                <img
-                  src="./achievements/applied-intelligence.png"
-                  alt=""
-                  width={66}
-                  height={66}
-                />
-                <span>
-                  <small>CERTIFICATO DISPONIBILE</small>
-                  <strong>{state.profileName}</strong>
-                  <em>{state.certificateId}</em>
-                </span>
-                <ArrowRight size={18} />
-              </button>
-            )}
-            <div className="streak-card">
-              <Flame size={21} />
-              <div>
-                <strong>
-                  {state.streakDays}{' '}
-                  {state.streakDays === 1
-                    ? 'giorno consecutivo'
-                    : 'giorni consecutivi'}
-                </strong>
-                <p>Torna domani per mantenere la continuità.</p>
-              </div>
-            </div>
-
-            <button className="quiet" onClick={download}>
-              <Download size={17} /> Scarica il tuo quaderno
-            </button>
+              </>
+            }
+          />
+          <aside className="mission-aside">
+            <LevelCard xp={xp} />
+            <NextMilestone state={state} />
+            <a className="academy-material-link" href="#progress">
+              Apri il profilo formativo <ArrowRight size={18} />
+            </a>
             <p className="storage-note">
               {storage
-                ? 'Progressi e quaderno salvati solo in questo browser. Non si sincronizzano tra dispositivi.'
-                : 'Salvataggio non disponibile: scarica il quaderno prima di chiudere.'}
+                ? 'Progressi salvati soltanto in questo browser.'
+                : 'Salvataggio non disponibile: scarica il quaderno.'}
             </p>
           </aside>
         </div>
@@ -1355,7 +840,7 @@ export default function Home() {
           <ProfileContent
             state={state}
             xp={xp}
-            level={unlocked + 1}
+            level={learningLevel(xp).current.level}
             achievements={achievements}
             storage={storage}
             onName={setProfileName}
@@ -1456,7 +941,9 @@ export default function Home() {
             />
             <span className="rarity-label">Leggendario</span>
             <h3>Applied Intelligence</h3>
-            <p>42 attività completate · 600 XP conquistati</p>
+            <p>
+              {activityDone} attività completate · {xp} XP conquistati
+            </p>
           </div>
           {!state.certificateId && (
             <div className="finale-identity">
@@ -1537,7 +1024,19 @@ export default function Home() {
             <h3>{state.profileName}</h3>
             <p>ha completato il corso online</p>
             <h4>Basi di Intelligenza Artificiale</h4>
-            <p>60 minuti · 6 moduli · 42 attività · 600 XP</p>
+            <p>
+              {state.completed.length} moduli completati ·{' '}
+              {Object.keys(state.competencyAwards).length} competenze acquisite
+            </p>
+            <ul className="certificate-competencies">
+              {competencyDefinitions
+                .filter((item) =>
+                  Object.hasOwn(state.competencyAwards, item.id),
+                )
+                .map((item) => (
+                  <li key={item.id}>✓ {item.name}</li>
+                ))}
+            </ul>
             <div className="certificate-foot">
               <span>AI Academy · Learn | Level up | Go further</span>
               <code>{state.certificateId}</code>

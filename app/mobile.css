@@ -857,3 +857,76 @@
     min-height: var(--touch-target);
   }
 }
+/* Learning cycle and educational profile reuse the Academy tokens. */
+.learning-experience { min-width: 0; }
+.learning-phases { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-1); padding: var(--space-4); border-bottom: 1px solid var(--line); }
+.learning-phases button { min-height: var(--touch-target); min-width: 0; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--ink-soft); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-1); font-size: var(--text-caption); }
+.learning-phases button[aria-current='step'] { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
+.learning-phase-header { padding: var(--space-6) var(--space-6) 0; }
+.learning-phase-header h2 { margin: var(--space-2) 0; font-size: var(--text-heading); }
+.learning-phase-header p { margin: 0; color: var(--ink-soft); }
+.learning-phase-header small { display: block; margin-top: var(--space-2); color: var(--ink-soft); font-size: var(--text-small); }
+.learning-activity h1 { font-size: var(--text-heading); line-height: var(--leading-heading); margin: 0 0 var(--space-5); }
+.learning-activity { min-height: 0; }
+.learning-experience .activity-footer { padding: var(--space-5) var(--space-6); }
+.learning-experience .step-nav { display: flex; justify-content: center; padding: var(--space-3); }
+.learning-experience .step-nav button { flex: 0 0 var(--touch-target); min-height: var(--touch-target); }
+.learning-experience .lesson-reference { padding: var(--space-4) var(--space-6); }
+.learning-experience summary, .competency summary { min-height: var(--touch-target); cursor: pointer; align-content: center; }
+.activity-text label { font-size: var(--text-body); }
+.activity-text textarea { width: 100%; max-width: 100%; border: 1px solid var(--input); border-radius: var(--radius-md); background: var(--surface); padding: var(--space-4); font: inherit; color: var(--foreground); }
+.activity-text .self-check { margin: var(--space-4) 0; }
+.activity-completed { display: flex; align-items: flex-start; gap: var(--space-2); color: var(--success); font-size: var(--text-small); }
+.activity-completed svg { flex-shrink: 0; }
+.xp-reward { display: block; min-height: var(--space-6); color: var(--success); font-weight: 600; font-size: var(--text-small); }
+.module-completion { margin-top: var(--space-4); }
+.module-completion :is(h2,h3,p) { margin: 0; }
+.module-completion > div { border-top: 1px solid var(--line); padding-top: var(--space-3); }
+.module-completion small { color: var(--ink-soft); }
+.progress-profile { display: grid; gap: var(--space-6); }
+.progress-profile :is(h1,h2,h3,p) { margin: 0; }
+.progress-profile h2 { font-size: var(--text-heading-small); }
+.progress-profile > header p { margin-top: var(--space-2); color: var(--ink-soft); }
+.level-card h2 { margin: 0; }
+.level-card p { color: var(--ink-soft); margin: 0; }
+.level-xp { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-2); font-size: var(--text-small); }
+.level-xp span { color: var(--ink-soft); }
+.competency-list { display: grid; gap: var(--space-4); }
+.competency { display: flex; gap: var(--space-3); padding: var(--space-4) 0; border-bottom: 1px solid var(--line); }
+.competency > svg { color: var(--success); flex-shrink: 0; margin-top: var(--space-1); }
+.competency > div { min-width: 0; }
+.competency h3, .competency-empty h3 { margin: 0 0 var(--space-2); font-size: var(--text-large); }
+.competency p, .competency-empty p { color: var(--ink-soft); margin: 0; font-size: var(--text-body); overflow-wrap: anywhere; }
+.competency small { display: block; color: var(--ink-soft); font-size: var(--text-small); margin-top: var(--space-2); }
+.competency details { margin-top: var(--space-2); font-size: var(--text-small); }
+.competency-empty { padding: var(--space-4); border-left: var(--space-1) solid var(--primary); background: var(--primary-soft); border-radius: var(--radius-sm); }
+.achievement-collection { display: grid; gap: var(--space-3); }
+.certificate-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.certificate-preview { aspect-ratio: auto; }
+.certificate-preview > img { display: none; }
+.certificate-competencies { text-align: left; margin: var(--space-4) 0; padding: 0; list-style: none; font-size: var(--text-small); line-height: var(--leading-body); }
+.desktop-progress-link { font-size: var(--text-small); color: var(--primary); min-height: var(--touch-target); display: flex; align-items: center; }
+@media (max-width: 768px) {
+  .desktop-progress-link { display: none; }
+  .learning-phases { padding: 0 0 var(--space-4); }
+  .learning-phase-header { padding: var(--space-4) 0 var(--space-6); }
+  .learning-activity h1 { font-size: var(--text-heading); }
+  .learning-experience .activity-footer { padding: var(--space-5) 0; }
+  .learning-experience .activity-footer > button:last-child { flex: 1; }
+  .learning-experience .lesson-reference { padding: var(--space-4) 0; }
+  .learning-experience .activity-footer { flex-wrap: wrap; }
+  .learning-experience .step-nav { padding: var(--space-2) 0; }
+  .certificate-preview > p { font-size: var(--text-caption); }
+}
+@media (min-width: 769px) {
+  .academy-app[data-screen='progress'] .course-shell > :not(.progress-screen) { display: none; }
+  .academy-app[data-screen='progress'] .progress-screen { display: block; max-width: 760px; margin: auto; }
+  .progress-profile .academy-badges { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
+  .progress-profile .academy-badge { display: grid; justify-items: center; padding: var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); color: var(--foreground); }
+  .progress-profile .academy-badge img { filter: grayscale(1); opacity: .6; }
+  .progress-profile .academy-badge.earned img { filter: none; opacity: 1; }
+  .progress-profile .academy-badge small, .progress-profile .academy-badge span { color: var(--ink-soft); font-size: var(--text-small); }
+  .progress-profile .progress-display { font-size: var(--text-stat); color: var(--primary); }
+  .progress-profile .overview-metrics { display: flex; gap: var(--space-8); }
+  .progress-profile .overview-metrics strong, .progress-profile .overview-metrics span { display: block; }
+}

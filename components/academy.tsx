@@ -1,3 +1,10 @@
+import { CompetencyList } from './learning';
+import {
+  courseModules,
+  PHASES,
+  COURSE_ACTIVITY_COUNT,
+} from '../app/learning-model';
+import { learningLevel } from '../app/learning-config';
 import Image from 'next/image';
 import type { ComponentProps, ReactNode, CSSProperties } from 'react';
 import {
@@ -201,7 +208,15 @@ export function BadgeTile({
       <Image src={item.image} alt="" width={84} height={84} unoptimized />
       <strong>{item.name}</strong>
       <small>{item.rarity}</small>
-      <span>{earned ? 'Sbloccato' : 'Da conquistare'}</span>
+      <span>
+        {earned
+          ? state.achievementAwards[item.id]?.earnedAt
+            ? new Date(
+                state.achievementAwards[item.id].earnedAt!,
+              ).toLocaleDateString('it-IT')
+            : 'Percorso precedente'
+          : 'Da conquistare'}
+      </span>
     </button>
   );
 }
@@ -238,11 +253,16 @@ export function CertificateCard({
 export function LessonHeader({
   module,
   step,
+  completed,
 }: {
   module: number;
   step: number;
+  completed: number;
 }) {
-  const percent = Math.round((((step % 3) + 1) / 3) * 100);
+  const current = courseModules[module - 1];
+  const activity = current.activities[step];
+  const phase = current.phases.find((item) => item.id === activity.phase)!;
+  const percent = Math.round((completed / current.activities.length) * 100);
   return (
     <header className="mobile-lesson-header">
       <div>
@@ -250,19 +270,14 @@ export function LessonHeader({
           <ArrowLeft size={21} />
         </a>
         <span>
-          Modulo {module} ·{' '}
-          {step < 3
-            ? `Lezione ${step + 1} di 3`
-            : step < 6
-              ? `Sfida ${step - 2} di 3`
-              : 'Laboratorio'}
+          Modulo {module} · {phase.name} ·{' '}
+          {phase.activities.indexOf(activity) + 1}/{phase.activities.length}
         </span>
-        <strong>{step < 6 ? `${percent}%` : '7/7'}</strong>
+        <strong>
+          {PHASES.findIndex((item) => item.id === activity.phase) + 1}/5
+        </strong>
       </div>
-      <Progress
-        value={step < 6 ? percent : 100}
-        aria-label="Posizione nella sezione"
-      />
+      <Progress value={percent} aria-label="Completamento del modulo" />
     </header>
   );
 }
@@ -304,7 +319,6 @@ export function ProfileContent({
   state,
   xp,
   level,
-  achievements,
   storage,
   onName,
   onDownload,
@@ -319,7 +333,6 @@ export function ProfileContent({
   onDownload: () => void;
   onCertificate: () => void;
 }) {
-  const earned = achievements.filter((item) => item.earned(state));
   return (
     <div className="profile-content">
       <AcademyCard>
@@ -330,7 +343,7 @@ export function ProfileContent({
               {state.profileName.trim() || 'Il tuo profilo locale'}
             </strong>
             <small>
-              Livello {level} · {xp} XP
+              Livello {level} · {learningLevel(xp).current.name} · {xp} XP
             </small>
           </span>
         </div>
@@ -348,16 +361,7 @@ export function ProfileContent({
           Le modifiche vengono salvate automaticamente.
         </p>
       </AcademyCard>
-      <SectionHeader title="Competenze acquisite" />
-      {earned.length ? (
-        <ul className="skill-list">
-          {earned.map((item) => (
-            <li key={item.id}>{item.result}</li>
-          ))}
-        </ul>
-      ) : (
-        <p>Le competenze compariranno qui mentre completi il percorso.</p>
-      )}
+      <CompetencyList state={state} />
       <CertificateCard
         available={!!state.certificateId}
         onOpen={onCertificate}
@@ -412,6 +416,9 @@ export function AppHeader({
           width={48}
           height={48}
         />
+      </a>
+      <a className="desktop-progress-link" href="#progress">
+        Progressi
       </a>
       <div className="scoreboard">
         <XPChip xp={xp} />
@@ -504,7 +511,9 @@ export function CourseHeroCard({
         </div>
         <div className="progress-copy">
           <span>AVANZAMENTO DEL CORSO</span>
-          <strong>{activityDone} di 42 attività</strong>
+          <strong>
+            {activityDone} di {COURSE_ACTIVITY_COUNT} attività
+          </strong>
           <Progress value={completion} aria-label="Completamento del corso" />
           <small>
             {finished

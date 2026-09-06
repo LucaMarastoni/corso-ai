@@ -1,6 +1,24 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { CSSProperties } from 'react';
+import {
+  AppHeader,
+  CourseHeroCard,
+  ProfileContent,
+  AcademyButton,
+  AcademyCard,
+  SectionHeader,
+  BottomNavigation,
+  ProgressSummary,
+  JourneyCard,
+  ObjectiveCard,
+  StreakCard,
+  BadgeTile,
+  CertificateCard,
+  LessonHeader,
+  LessonBlock,
+  InsightCard,
+  type Screen,
+} from '../components/academy';
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -16,7 +34,6 @@ import {
   ArrowRight,
   Check,
   Lock,
-  Volume2,
   Pause,
   Play,
   Square,
@@ -27,12 +44,8 @@ import {
   Download,
   Sparkles,
   Flame,
-  Award,
   Target,
-  Clock3,
-  Layers3,
   Share2,
-  UserRound,
 } from 'lucide-react';
 import { levels } from './journey';
 import { achievements, type Achievement } from './achievements';
@@ -90,14 +103,17 @@ function writeWrapped(
     } else line = candidate;
   }
   if (line) lines.push(line);
-  lines.forEach((value, index) => context.fillText(value, x, y + index * lineHeight));
+  lines.forEach((value, index) =>
+    context.fillText(value, x, y + index * lineHeight),
+  );
   return y + lines.length * lineHeight;
 }
 
 function canvasBlob(canvas: HTMLCanvasElement) {
   return new Promise<Blob>((resolve, reject) =>
     canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error('Immagine non disponibile'))),
+      (blob) =>
+        blob ? resolve(blob) : reject(new Error('Immagine non disponibile')),
       'image/png',
     ),
   );
@@ -112,6 +128,8 @@ function saveBlob(blob: Blob, name: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 export default function Home() {
+  const [screen, setScreen] = useState<Screen>('home');
+  const [allBadges, setAllBadges] = useState(false);
   const [state, setState] = useState<LearningState>(initialState),
     [ready, setReady] = useState(false),
     [storage, setStorage] = useState(true);
@@ -158,6 +176,26 @@ export default function Home() {
     setSegment(-1);
   }, []);
   useEffect(() => {
+    const syncScreen = () => {
+      const value = window.location.hash.slice(1);
+      const next: Screen = [
+        'home',
+        'lessons',
+        'lesson',
+        'progress',
+        'profile',
+      ].includes(value)
+        ? (value as Screen)
+        : 'home';
+      setScreen(next);
+      stop();
+      window.scrollTo(0, 0);
+    };
+    syncScreen();
+    window.addEventListener('hashchange', syncScreen);
+    return () => window.removeEventListener('hashchange', syncScreen);
+  }, [stop]);
+  useEffect(() => {
     try {
       const raw = localStorage.getItem(STORE);
       const today = new Date().toLocaleDateString('en-CA');
@@ -203,7 +241,11 @@ export default function Home() {
     setHint(false);
     setSolution(false);
     setCelebrate(false);
-    if (ready && step < 3)
+    if (
+      ready &&
+      step < 3 &&
+      (screen === 'lesson' || window.matchMedia('(min-width: 769px)').matches)
+    )
       setState((s) => ({
         ...s,
         seen: [...new Set([...s.seen, keyFor(l, step)])],
@@ -212,7 +254,7 @@ export default function Home() {
       heading.current?.focus();
       navTriggered.current = false;
     }
-  }, [l, step, ready, stop]);
+  }, [l, step, ready, stop, screen]);
   const stateRef = useRef(state);
   stateRef.current = state;
   useEffect(() => {
@@ -264,6 +306,8 @@ export default function Home() {
   function navigate(levelIndex: number, nextStep = 0) {
     if (!ready || levelIndex > unlock(state)) return;
     stop();
+    if (window.matchMedia('(max-width: 768px)').matches)
+      window.location.hash = 'lesson';
     navTriggered.current = true;
     setState((s) => ({ ...s, level: levelIndex, step: nextStep }));
   }
@@ -449,9 +493,13 @@ export default function Home() {
     setShareStatus('Creo la card…');
     try {
       const blob = await createSocialCard(item);
-      const file = new File([blob], `${item.id}-${state.profileName.trim().replaceAll(' ', '-')}.png`, {
-        type: 'image/png',
-      });
+      const file = new File(
+        [blob],
+        `${item.id}-${state.profileName.trim().replaceAll(' ', '-')}.png`,
+        {
+          type: 'image/png',
+        },
+      );
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         try {
           await navigator.share({
@@ -466,7 +514,9 @@ export default function Home() {
             return;
           }
           saveBlob(blob, file.name);
-          setShareStatus('Condivisione non disponibile: la card è stata scaricata.');
+          setShareStatus(
+            'Condivisione non disponibile: la card è stata scaricata.',
+          );
         }
       } else {
         saveBlob(blob, file.name);
@@ -500,7 +550,9 @@ export default function Home() {
     context.fillStyle = '#7b6847';
     context.font = '700 22px Inter, sans-serif';
     context.fillText('CERTIFICATO DI PARTECIPAZIONE', 1685, 145);
-    const image = await loadCanvasImage('./achievements/applied-intelligence.png');
+    const image = await loadCanvasImage(
+      './achievements/applied-intelligence.png',
+    );
     context.drawImage(image, 720, 155, 360, 360);
     context.textAlign = 'center';
     context.fillStyle = '#8d7444';
@@ -527,7 +579,11 @@ export default function Home() {
       month: 'long',
       year: 'numeric',
     }).format(new Date(`${state.completionDate}T12:00:00`));
-    context.fillText(`Completato il ${date} · 6 moduli · 42 attività · 600 XP`, 900, 885);
+    context.fillText(
+      `Completato il ${date} · 6 moduli · 42 attività · 600 XP`,
+      900,
+      885,
+    );
     context.textAlign = 'left';
     context.fillStyle = '#7b6847';
     context.font = '700 20px Inter, sans-serif';
@@ -545,8 +601,15 @@ export default function Home() {
     context.textAlign = 'center';
     context.fillStyle = '#8c9199';
     context.font = '400 17px Inter, sans-serif';
-    context.fillText('Attestato di partecipazione al percorso; non costituisce una qualifica professionale accreditata.', 900, 1180);
-    saveBlob(await canvasBlob(canvas), `certificato-${state.certificateId}.png`);
+    context.fillText(
+      'Attestato di partecipazione al percorso; non costituisce una qualifica professionale accreditata.',
+      900,
+      1180,
+    );
+    saveBlob(
+      await canvasBlob(canvas),
+      `certificato-${state.certificateId}.png`,
+    );
   }
   const unlocked = unlock(state);
   const completion = completionPercent(state);
@@ -555,142 +618,145 @@ export default function Home() {
   const earnedCount = achievements.filter((item) => item.earned(state)).length;
   const nextMilestone = achievements.find((item) => !item.earned(state));
   return (
-    <>
-      <header className="topbar">
-        <a className="brand" href="./">
-          <img
-            className="brand-wordmark"
-            src="./brand/ai-academy-wordmark.png"
-            alt="AI Academy · Learn, Level up, Go further"
-            width={150}
-            height={96}
-          />
-          <img
-            className="brand-symbol"
-            src="./brand/ai-academy-mark.png"
-            alt="AI Academy"
-            width={48}
-            height={48}
-          />
-        </a>
-        <div className="scoreboard">
-          <span className="metric-pill xp-pill">
-            <Star size={17} fill="currentColor" /> {xp} <small>XP</small>
-          </span>
-          <span
-            className="metric-pill streak-pill"
-            title="Giorni consecutivi di studio"
-          >
-            <Flame size={17} /> {state.streakDays}{' '}
-            <small>{state.streakDays === 1 ? 'giorno' : 'giorni'}</small>
-          </span>
-        </div>
-        <button
-          className="profile-trigger"
-          onClick={() => setShowProfile(true)}
-          aria-label="Apri il profilo"
-        >
-          <UserRound size={18} />
-          <span>Profilo</span>
-        </button>
-        <a className="download-link" href="./materiali/dispensa.md" download>
-          <BookOpen size={18} />
-          <span>Dispensa</span>
-        </a>
-      </header>
-      <div className="mobile-progress" aria-label="Avanzamento rapido">
-        <div>
-          <strong>{completion}%</strong>
-          <span>Modulo {l + 1} di 6</span>
-        </div>
-        <Progress value={completion} aria-label="Completamento del corso" />
-        <button onClick={() => heading.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>
-          Continua
-        </button>
-      </div>
-      <div className="course-shell">
-        <section className="course-card" aria-labelledby="course-title">
-          <div className="course-card-main">
-            <div className="course-index">01</div>
-            <div>
-              <p className="eyebrow">CORSO PROFESSIONALE · LIVELLO BASE</p>
-              <h1 id="course-title">Basi di Intelligenza Artificiale</h1>
-              <p className="course-promise">
-                Comprendi come ragiona un assistente AI, scrivi prompt efficaci
-                e verifica le risposte prima di usarle nel lavoro.
-              </p>
-              <div className="course-meta">
-                <span>
-                  <Clock3 size={16} /> 60 minuti
-                </span>
-                <span>
-                  <Layers3 size={16} /> 6 moduli
-                </span>
-                <span>
-                  <Award size={16} /> {earnedCount}/6 collectible
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="course-progress-card">
-            <div
-              className="completion-ring"
-              style={
-                { '--completion': `${completion * 3.6}deg` } as CSSProperties
-              }
-            >
-              <div>
-                <strong>{completion}%</strong>
-                <span>completato</span>
-              </div>
-            </div>
-            <div className="progress-copy">
-              <span>AVANZAMENTO DEL CORSO</span>
-              <strong>{activityDone} di 42 attività</strong>
-              <Progress
-                value={completion}
-                aria-label="Completamento del corso"
-              />
-              <small>
-                {finished
-                  ? 'Percorso completato'
-                  : `Continua dal modulo ${l + 1}`}
-              </small>
-            </div>
-          </div>
+    <div className="academy-app" data-screen={screen}>
+      <AppHeader
+        xp={xp}
+        streakDays={state.streakDays}
+        onProfile={() => setShowProfile(true)}
+      />
+      <LessonHeader module={l + 1} step={step} />
+      <main className="course-shell">
+        <section className="home-intro mobile-only" aria-label="Benvenuto">
+          <p className="eyebrow">IL TUO PROSSIMO PASSO</p>
+          <h2>
+            Ciao
+            {state.profileName.trim()
+              ? `, ${state.profileName.trim().split(' ')[0]}`
+              : ''}
+            !
+          </h2>
+          <p>Pronto a continuare il tuo percorso?</p>
+          <ProgressSummary completion={completion} module={l + 1} />
         </section>
-        <section className="mobile-dashboard" aria-label="Riepilogo personale">
-          <div className="mobile-dashboard-head">
-            <div>
-              <span className="eyebrow">IL TUO PERCORSO</span>
-              <strong>{finished ? 'Corso completato' : level.title}</strong>
-              <small>{completion}% completato · {xp} XP</small>
+        <CourseHeroCard
+          completion={completion}
+          activityDone={activityDone}
+          moduleNumber={l + 1}
+          finished={finished}
+          ready={ready}
+          onContinue={() => navigate(l, step)}
+        />
+        <section
+          className="home-next mobile-only"
+          aria-label="Il prossimo passo"
+        >
+          <JourneyCard title={finished ? 'Percorso completato' : level.title} />
+          <ObjectiveCard
+            title={
+              finished
+                ? 'Porta il tuo metodo nel lavoro'
+                : `Completa il Modulo ${unlocked + 1}`
+            }
+          >
+            {nextMilestone
+              ? `Prossimo badge: ${nextMilestone.name}`
+              : 'Tutti i badge conquistati.'}
+          </ObjectiveCard>
+        </section>
+        <section
+          className="progress-screen mobile-only"
+          aria-labelledby="progress-title"
+        >
+          <p className="eyebrow">UN PASSO ALLA VOLTA</p>
+          <h1 id="progress-title">I tuoi progressi</h1>
+          <AcademyCard className="progress-overview">
+            <strong className="progress-display">
+              {completion}
+              <span>%</span>
+            </strong>
+            <p>del corso completato</p>
+            <Progress value={completion} aria-label="Completamento del corso" />
+            <div className="overview-metrics">
+              <div>
+                <strong>{state.completed.length}/6</strong>
+                <span>Moduli</span>
+              </div>
+              <div>
+                <strong>{activityDone}/42</strong>
+                <span>Attività</span>
+              </div>
+              <div>
+                <strong>60 min</strong>
+                <span>Tempo stimato</span>
+              </div>
             </div>
-            <button
-              className="primary"
-              onClick={() => heading.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-            >
-              {finished ? 'Rivedi' : 'Continua'} <ArrowRight size={17} />
-            </button>
-          </div>
-          <Progress value={completion} aria-label="Progresso personale" />
-          <div className="mobile-achievement-strip">
-            {achievements.slice(0, 4).map((item) => (
-              <button
-                key={item.id}
-                className={item.earned(state) ? 'earned' : ''}
-                onClick={() => setSelectedAchievement(item)}
+          </AcademyCard>
+          <StreakCard days={state.streakDays} />
+          {nextMilestone && (
+            <AcademyCard tone="highlight">
+              <span className="eyebrow">PROSSIMO TRAGUARDO</span>
+              <h2>{nextMilestone.name}</h2>
+              <p>{nextMilestone.criterion}</p>
+              <AcademyButton
+                variant="ghost"
+                onClick={() => setSelectedAchievement(nextMilestone)}
               >
-                <img src={item.image} alt="" width={48} height={48} />
-                <span>{item.name}</span>
-              </button>
-            ))}
-            <button className="all-achievements" onClick={() => setShowProfile(true)}>
-              <strong>{earnedCount}/6</strong>
-              <span>Tutti i badge</span>
-            </button>
+                Scopri il badge
+                <ArrowRight size={16} />
+              </AcademyButton>
+            </AcademyCard>
+          )}
+          <SectionHeader title="I tuoi badge" />
+          <div className="academy-badges">
+            {achievements
+              .slice(0, allBadges ? achievements.length : 3)
+              .map((item) => (
+                <BadgeTile
+                  key={item.id}
+                  item={item}
+                  state={state}
+                  onSelect={setSelectedAchievement}
+                />
+              ))}
           </div>
-          <p>Il percorso è personale e resta salvato su questo dispositivo.</p>
+          <AcademyButton
+            variant="ghost"
+            aria-expanded={allBadges}
+            onClick={() => setAllBadges(!allBadges)}
+          >
+            {allBadges
+              ? 'Mostra meno'
+              : `Vedi tutti i badge (${earnedCount}/6)`}
+            <ArrowRight size={16} />
+          </AcademyButton>
+          <CertificateCard
+            available={!!state.certificateId}
+            onOpen={() => setShowCertificate(true)}
+          />
+          <AcademyButton onClick={() => navigate(l, step)}>
+            Continua il percorso
+            <ArrowRight size={18} />
+          </AcademyButton>
+        </section>
+        <section
+          className="profile-screen mobile-only"
+          aria-labelledby="profile-title"
+        >
+          <p className="eyebrow">IL TUO SPAZIO</p>
+          <h1 id="profile-title">Profilo</h1>
+          <ProfileContent
+            state={state}
+            xp={xp}
+            level={unlocked + 1}
+            achievements={achievements}
+            storage={storage}
+            onName={setProfileName}
+            onDownload={download}
+            onCertificate={() => {
+              setShowProfile(false);
+              setShowCertificate(true);
+            }}
+          />
         </section>
         <div className="section-heading">
           <div>
@@ -699,37 +765,6 @@ export default function Home() {
           </div>
           <p>Completa ogni modulo per sbloccare il successivo.</p>
         </div>
-        <details className="mobile-module-picker">
-          <summary>
-            <span>
-              <small>MODULO {l + 1} DI 6</small>
-              <strong>{level.title}</strong>
-            </span>
-            <em>{state.completed.includes(l) ? 'Completato' : `${Math.round(((step + 1) / 7) * 100)}%`}</em>
-          </summary>
-          <div>
-            {levels.map((item, index) => (
-              <button
-                key={item.title}
-                disabled={!ready || index > unlocked}
-                className={index === l ? 'active' : ''}
-                onClick={() => navigate(index)}
-              >
-                <span>{String(index + 1).padStart(2, '0')}</span>
-                <strong>{item.title}</strong>
-                <small>
-                  {state.completed.includes(index)
-                    ? 'Completato'
-                    : index > unlocked
-                      ? 'Bloccato'
-                      : index === l
-                        ? 'In corso'
-                        : 'Disponibile'}
-                </small>
-              </button>
-            ))}
-          </div>
-        </details>
         <nav className="level-map" aria-label="Livelli del corso">
           {levels.map((x, n) => (
             <button
@@ -775,7 +810,7 @@ export default function Home() {
           ))}
         </nav>
         <div className="lesson-layout">
-          <main className="lesson-panel">
+          <article className="lesson-panel">
             <div className="panel-top">
               <span className="eyebrow">
                 LIVELLO {l + 1} · {level.tag}
@@ -793,7 +828,7 @@ export default function Home() {
               <div className="activity-label">
                 {slide ? (
                   <>
-                    <Volume2 size={16} /> SLIDE {step + 1} DI 3
+                    <BookOpen size={16} /> AI · {level.tag}
                   </>
                 ) : challenge ? (
                   <>
@@ -816,22 +851,18 @@ export default function Home() {
                 <>
                   <div className="slide-steps">
                     {slide.steps.map((text, i) => (
-                      <div
+                      <LessonBlock
                         key={text}
-                        style={{ animationDelay: `${i * 120}ms` }}
-                        className={`slide-row ${segment === i + 1 ? 'speaking' : ''}`}
+                        number={i + 1}
+                        speaking={segment === i + 1}
                       >
-                        <span className="step-number">0{i + 1}</span>
-                        <p>{text}</p>
-                      </div>
+                        {text}
+                      </LessonBlock>
                     ))}
                   </div>
-                  <div
-                    className={'takeaway ' + (segment === 4 ? 'speaking' : '')}
-                  >
-                    <Lightbulb size={23} />
-                    <strong>{slide.takeaway}</strong>
-                  </div>
+                  <InsightCard speaking={segment === 4}>
+                    {slide.takeaway}
+                  </InsightCard>
                   <div className="audio-controls">
                     <button
                       className="audio-button"
@@ -985,7 +1016,9 @@ export default function Home() {
                   </div>
                   {l === 5 && !state.completed.includes(5) && (
                     <div className="identity-field">
-                      <label htmlFor="profile-name">Nome e cognome sul certificato</label>
+                      <label htmlFor="profile-name">
+                        Nome e cognome sul certificato
+                      </label>
                       <input
                         id="profile-name"
                         value={state.profileName}
@@ -994,7 +1027,10 @@ export default function Home() {
                         onChange={(event) => setProfileName(event.target.value)}
                         placeholder="Es. Luca Bianchi"
                       />
-                      <small>Controlla l’ortografia: questo nome apparirà anche sulle card social.</small>
+                      <small>
+                        Controlla l’ortografia: questo nome apparirà anche sulle
+                        card social.
+                      </small>
                     </div>
                   )}
                   <label className="field-label" htmlFor="work">
@@ -1065,7 +1101,11 @@ export default function Home() {
                   {celebrate && (
                     <div className="celebration" role="status">
                       <img
-                        src={finished ? './achievements/applied-intelligence.png' : './achievements/signal-frame.png'}
+                        src={
+                          finished
+                            ? './achievements/applied-intelligence.png'
+                            : './achievements/signal-frame.png'
+                        }
                         alt=""
                         width={100}
                         height={100}
@@ -1100,7 +1140,7 @@ export default function Home() {
               </button>
               {step < 6 ? (
                 <button
-                  className="primary"
+                  className={challenge && !solved ? 'quiet' : 'primary'}
                   disabled={!ready || (!!challenge && !solved)}
                   onClick={() => navigate(l, step + 1)}
                 >
@@ -1160,7 +1200,15 @@ export default function Home() {
                 </button>
               ))}
             </nav>
-          </main>
+            <details className="reference lesson-reference">
+              <summary>Il brief di Officina Pedale</summary>
+              <p>
+                Attività inventata. Ripara bici urbane, esegue manutenzione
+                freni, sostituisce camere d’aria. Appuntamenti tramite modulo di
+                contatto. Prezzi, orari, indirizzo e tempi non disponibili.
+              </p>
+            </details>
+          </article>
           <aside className="mission-aside">
             <div className="mission-card">
               <span className="eyebrow">LA TUA MISSIONE</span>
@@ -1247,8 +1295,16 @@ export default function Home() {
               </div>
             </section>
             {finished && state.certificateId && (
-              <button className="certificate-shortcut" onClick={() => setShowCertificate(true)}>
-                <img src="./achievements/applied-intelligence.png" alt="" width={66} height={66} />
+              <button
+                className="certificate-shortcut"
+                onClick={() => setShowCertificate(true)}
+              >
+                <img
+                  src="./achievements/applied-intelligence.png"
+                  alt=""
+                  width={66}
+                  height={66}
+                />
                 <span>
                   <small>CERTIFICATO DISPONIBILE</small>
                   <strong>{state.profileName}</strong>
@@ -1269,14 +1325,7 @@ export default function Home() {
                 <p>Torna domani per mantenere la continuità.</p>
               </div>
             </div>
-            <details className="reference">
-              <summary>Il brief di Officina Pedale</summary>
-              <p>
-                Attività inventata. Ripara bici urbane, esegue manutenzione
-                freni, sostituisce camere d’aria. Appuntamenti tramite modulo di
-                contatto. Prezzi, orari, indirizzo e tempi non disponibili.
-              </p>
-            </details>
+
             <button className="quiet" onClick={download}>
               <Download size={17} /> Scarica il tuo quaderno
             </button>
@@ -1293,7 +1342,8 @@ export default function Home() {
             60 minuti stimati, inclusa la pratica · Attestato di partecipazione
           </span>
         </footer>
-      </div>
+      </main>
+      <BottomNavigation screen={screen} />
       <Dialog open={showProfile} onOpenChange={setShowProfile}>
         <DialogContent className="profile-dialog">
           <DialogHeader>
@@ -1302,64 +1352,19 @@ export default function Home() {
               Il tuo riepilogo personale su questo dispositivo.
             </DialogDescription>
           </DialogHeader>
-          <label className="dialog-name-field" htmlFor="profile-dialog-name">
-            Nome e cognome
-            <input
-              id="profile-dialog-name"
-              value={state.profileName}
-              maxLength={80}
-              autoComplete="name"
-              onChange={(event) => setProfileName(event.target.value)}
-              placeholder="Aggiungi il tuo nome"
-            />
-          </label>
-          <div className="profile-metrics">
-            <div><strong>{completion}%</strong><span>corso</span></div>
-            <div><strong>{xp}</strong><span>XP</span></div>
-            <div><strong>{state.completed.length}/6</strong><span>moduli</span></div>
-            <div><strong>{state.streakDays}</strong><span>streak</span></div>
-          </div>
-          <div className="profile-progress">
-            <span>Progresso complessivo</span>
-            <strong>{activityDone}/42 attività</strong>
-            <Progress value={completion} aria-label="Progresso complessivo" />
-          </div>
-          <div className="profile-badges">
-            <div className="profile-section-title">
-              <strong>Collectible</strong>
-              <span>{earnedCount}/6 sbloccati</span>
-            </div>
-            <div>
-              {achievements.map((item) => (
-                <button
-                  key={item.id}
-                  className={item.earned(state) ? 'earned' : ''}
-                  onClick={() => {
-                    setShowProfile(false);
-                    setSelectedAchievement(item);
-                  }}
-                >
-                  <img src={item.image} alt="" width={68} height={68} />
-                  <span>{item.name}</span>
-                  <small>{item.rarity}</small>
-                </button>
-              ))}
-            </div>
-          </div>
-          {state.certificateId && (
-            <button
-              className="primary wide-action"
-              onClick={() => {
-                setShowProfile(false);
-                setShowCertificate(true);
-              }}
-            >
-              Apri il certificato <ArrowRight size={18} />
-            </button>
-          )}
-          <p className="local-profile-note">
-            Questo profilo non richiede un account. I dati restano nel browser e non si sincronizzano con altri dispositivi.
-          </p>
+          <ProfileContent
+            state={state}
+            xp={xp}
+            level={unlocked + 1}
+            achievements={achievements}
+            storage={storage}
+            onName={setProfileName}
+            onDownload={download}
+            onCertificate={() => {
+              setShowProfile(false);
+              setShowCertificate(true);
+            }}
+          />
         </DialogContent>
       </Dialog>
       <Dialog
@@ -1377,7 +1382,9 @@ export default function Home() {
                     : 'Questo collectible è ancora da conquistare.'}
                 </DialogDescription>
               </DialogHeader>
-              <div className={`collectible-preview rarity-${selectedAchievement.rarity.toLowerCase()}`}>
+              <div
+                className={`collectible-preview rarity-${selectedAchievement.rarity.toLowerCase()}`}
+              >
                 <span className="preview-brand">AI ACADEMY · COLLECTIBLE</span>
                 <img
                   src={selectedAchievement.image}
@@ -1385,7 +1392,9 @@ export default function Home() {
                   width={220}
                   height={220}
                 />
-                <span className="rarity-label">{selectedAchievement.rarity}</span>
+                <span className="rarity-label">
+                  {selectedAchievement.rarity}
+                </span>
                 <h3>{selectedAchievement.name}</h3>
                 <p>{selectedAchievement.result}</p>
                 <div>
@@ -1419,7 +1428,9 @@ export default function Home() {
                   >
                     <Share2 size={18} /> Condividi o scarica la card
                   </button>
-                  <p className="share-status" role="status">{shareStatus}</p>
+                  <p className="share-status" role="status">
+                    {shareStatus}
+                  </p>
                 </>
               )}
             </>
@@ -1431,7 +1442,8 @@ export default function Home() {
           <DialogHeader>
             <DialogTitle>Il percorso è completo.</DialogTitle>
             <DialogDescription>
-              Hai trasformato sei moduli di teoria e pratica in un metodo che puoi usare nel lavoro.
+              Hai trasformato sei moduli di teoria e pratica in un metodo che
+              puoi usare nel lavoro.
             </DialogDescription>
           </DialogHeader>
           <div className="finale-stage">
@@ -1448,7 +1460,9 @@ export default function Home() {
           </div>
           {!state.certificateId && (
             <div className="finale-identity">
-              <label htmlFor="finale-name">Nome e cognome sul certificato</label>
+              <label htmlFor="finale-name">
+                Nome e cognome sul certificato
+              </label>
               <input
                 id="finale-name"
                 value={state.profileName}
@@ -1499,15 +1513,26 @@ export default function Home() {
           <DialogHeader>
             <DialogTitle>Certificato di partecipazione</DialogTitle>
             <DialogDescription>
-              Il file ad alta risoluzione è pronto per il tuo portfolio o profilo LinkedIn.
+              Il file ad alta risoluzione è pronto per il tuo portfolio o
+              profilo LinkedIn.
             </DialogDescription>
           </DialogHeader>
           <div className="certificate-preview">
             <div className="certificate-head">
-              <img src="./brand/ai-academy-wordmark.png" alt="AI Academy" width={88} height={56} />
+              <img
+                src="./brand/ai-academy-wordmark.png"
+                alt="AI Academy"
+                width={88}
+                height={56}
+              />
               <span>CERTIFICATO DI PARTECIPAZIONE</span>
             </div>
-            <img src="./achievements/applied-intelligence.png" alt="" width={105} height={105} />
+            <img
+              src="./achievements/applied-intelligence.png"
+              alt=""
+              width={105}
+              height={105}
+            />
             <small>SI ATTESTA CHE</small>
             <h3>{state.profileName}</h3>
             <p>ha completato il corso online</p>
@@ -1522,10 +1547,11 @@ export default function Home() {
             <Download size={18} /> Scarica il certificato PNG
           </button>
           <p className="certificate-note">
-            Attestato di partecipazione al percorso; non costituisce una qualifica professionale accreditata.
+            Attestato di partecipazione al percorso; non costituisce una
+            qualifica professionale accreditata.
           </p>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }

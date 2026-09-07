@@ -96,6 +96,7 @@ function LessonNavigation({
   onNext,
   label,
   disabled,
+  prompt,
 }: {
   current: number;
   total: number;
@@ -104,6 +105,7 @@ function LessonNavigation({
   onNext: () => void;
   label: string;
   disabled?: boolean;
+  prompt?: string;
 }) {
   return (
     <footer className="lp-navigation">
@@ -123,10 +125,14 @@ function LessonNavigation({
           {current} di {total}
         </span>
       </div>
-      <AcademyButton disabled={disabled} onClick={onNext}>
-        <span>{label}</span>
-        <ArrowRight size={20} />
-      </AcademyButton>
+      {prompt ? (
+        <span className="lp-answer-prompt">{prompt}</span>
+      ) : (
+        <AcademyButton disabled={disabled} onClick={onNext}>
+          <span>{label}</span>
+          <ArrowRight size={20} />
+        </AcademyButton>
+      )}
     </footer>
   );
 }
@@ -144,6 +150,7 @@ function LessonFrame({
   direction = 'next',
   pulse,
   onInteraction,
+  journey,
 }: {
   moduleNumber: number;
   title: string;
@@ -157,6 +164,7 @@ function LessonFrame({
   progressValue?: number;
   direction?: 'next' | 'back';
   pulse?: ReactNode;
+  journey?: ReactNode;
   onInteraction?: () => void;
 }) {
   const body = useRef<HTMLDivElement>(null);
@@ -182,6 +190,7 @@ function LessonFrame({
         total={total}
         progressValue={progressValue}
       />
+      {journey}
       <div
         className="lp-body"
         ref={body}
@@ -825,24 +834,30 @@ export function LessonPlayer({
     if (ready && available)
       onChange((current) => advanceLesson(current, state.level, activity.id));
   };
-  const submit = () => {
+  const submit = (candidate: LearningState = state) => {
     if (!ready || !available) return;
     cancelFlow();
-    if (!valid)
+    const correct = canCompleteActivity(candidate, candidate.level, activity);
+    const candidateSignature = JSON.stringify(
+      activity.question
+        ? candidate.answers[activity.id]
+        : candidate.responses[activity.id],
+    );
+    if (!correct)
       attempts.current[activity.id] = (attempts.current[activity.id] || 0) + 1;
-    const completed = valid
-      ? completeActivity(state, state.level, activity.id)
-      : state;
+    const completed = correct
+      ? completeActivity(candidate, candidate.level, activity.id)
+      : candidate;
     setChecked({
       id: activity.id,
-      signature,
-      correct: valid,
+      signature: candidateSignature,
+      correct,
       xp: score(completed) - score(state),
       attempts: attempts.current[activity.id] || 0,
       token: Date.now(),
     });
-    if (valid) {
-      onChange((value) => completeActivity(value, state.level, activity.id));
+    onChange(completed);
+    if (correct) {
       const explanation =
         activity.question?.why || activity.interaction?.explanation || '';
       const delay = quizFlowDelay(
@@ -856,7 +871,12 @@ export function LessonPlayer({
   const next = () => {
     if (!ready || !available) return;
     if (flow.current.finish(activity.id)) return;
-    if (isQuiz) return feedback?.correct ? advance() : submit();
+    if (isQuiz)
+      return feedback?.correct
+        ? advance()
+        : activity.question
+          ? undefined
+          : submit();
     if (activity.type === 'unlock') {
       if (!done) {
         onChange((value) => completeActivity(value, state.level, activity.id));
@@ -897,11 +917,15 @@ export function LessonPlayer({
       : isQuiz
         ? feedback?.correct
           ? 'Continua'
-          : 'Verifica risposta'
+          : activity.question
+            ? feedback
+              ? 'Scegli un’altra risposta'
+              : 'Scegli una risposta'
+            : 'Completa le risposte'
         : activity.type === 'unlock'
           ? done
             ? state.level < course.modules.length - 1
-              ? 'Prossimo modulo'
+              ? `Inizia modulo ${state.level + 2}`
               : 'Apri attestato'
             : 'Completa il modulo'
           : 'Continua';
@@ -939,6 +963,49 @@ export function LessonPlayer({
         module.activities.length
       }
       onInteraction={cancelFlow}
+      journey={
+        <div className="lp-course-journey" aria-label="Avanzamento del corso">
+          <div>
+            <strong>
+              Modulo {state.level + 1} di {course.modules.length}
+            </strong>
+            <span>{state.completed.length} completati</span>
+          </div>
+          <ol>
+            {course.modules.map((item, index) => (
+              <li
+                key={item.id}
+                className={
+                  state.completed.includes(index)
+                    ? 'complete'
+                    : index === state.level
+                      ? 'current'
+                      : ''
+                }
+                aria-current={index === state.level ? 'step' : undefined}
+                aria-label={`Modulo ${index + 1}: ${item.title}, ${state.completed.includes(index) ? 'completato' : index === state.level ? 'in corso' : 'da completare'}`}
+              >
+                {state.completed.includes(index) ? (
+                  <Check size={14} />
+                ) : (
+                  index + 1
+                )}
+              </li>
+            ))}
+          </ol>
+          <p>
+            {module.title} ·{' '}
+            {Math.round(
+              (100 *
+                module.activities.filter((item) =>
+                  isActivityComplete(state, item.id),
+                ).length) /
+                module.activities.length,
+            )}
+            % completato
+          </p>
+        </div>
+      }
       pulse={
         pulse?.id === activity.id ? (
           <div className="lp-micro-reward" role="status">
@@ -961,11 +1028,24 @@ export function LessonPlayer({
           current={current}
           total={total}
           dots={kind === 'slide'}
+          prompt={
+            activity.question && !feedback?.correct
+              ? feedback
+                ? 'Tocca un’altra risposta'
+                : 'Tocca una risposta'
+              : undefined
+          }
           onBack={back}
           onNext={next}
           label={label}
           disabled={
-            !ready || !available || (isQuiz ? !answered : !done && !valid)
+            !ready ||
+            !available ||
+            (isQuiz
+              ? activity.question
+                ? !feedback?.correct
+                : !answered
+              : !done && !valid)
           }
         />
       }
@@ -981,14 +1061,37 @@ export function LessonPlayer({
           </a>
         </section>
       ) : kind === 'slide' && activity.slide ? (
-        <SlideRenderer
-          slide={activity.slide}
-          category={
-            course.id === 'ai-basics'
-              ? 'AI · IL METODO'
-              : 'GOOGLE ADS · IL METODO'
-          }
-        />
+        <>
+          {current === 1 && (
+            <div className="lp-module-entry">
+              <span>
+                MODULO {state.level + 1} / {course.modules.length}
+              </span>
+              <strong>
+                {state.completed.includes(state.level)
+                  ? 'Ripassa questo modulo'
+                  : state.level > 0
+                    ? 'Un nuovo passo nel tuo percorso'
+                    : 'Il tuo percorso comincia qui'}
+              </strong>
+              {state.level > 0 && (
+                <p>
+                  Hai completato {state.completed.length}{' '}
+                  {state.completed.length === 1 ? 'modulo' : 'moduli'}. Ora:{' '}
+                  {module.title}.
+                </p>
+              )}
+            </div>
+          )}
+          <SlideRenderer
+            slide={activity.slide}
+            category={
+              course.id === 'ai-basics'
+                ? 'AI · IL METODO'
+                : 'GOOGLE ADS · IL METODO'
+            }
+          />
+        </>
       ) : (
         <section
           className={`lp-quiz ${activity.type === 'unlock' ? 'lp-completion' : ''}`}
@@ -1000,7 +1103,13 @@ export function LessonPlayer({
                 ? 'IL TUO RISULTATO'
                 : 'IN PRATICA'}
           </p>
-          <h1 tabIndex={-1}>{activity.question?.goal || activity.title}</h1>
+          <h1 tabIndex={-1}>
+            {activity.type === 'unlock'
+              ? done
+                ? `Modulo ${state.level + 1} completato!`
+                : 'Hai raggiunto il traguardo.'
+              : activity.question?.goal || activity.title}
+          </h1>
           {!activity.question && activity.type !== 'unlock' && (
             <p className="lp-explanation">{activity.description}</p>
           )}
@@ -1011,12 +1120,10 @@ export function LessonPlayer({
               options={activity.question.options}
               value={state.answers[activity.id]}
               onValue={(value) => {
-                cancelFlow();
-                setChecked(null);
-                onChange((current) => ({
-                  ...current,
-                  answers: { ...current.answers, [activity.id]: value },
-                }));
+                submit({
+                  ...state,
+                  answers: { ...state.answers, [activity.id]: value },
+                });
               }}
             />
           )}
@@ -1027,7 +1134,15 @@ export function LessonPlayer({
               onChange={(value) => {
                 cancelFlow();
                 setChecked(null);
-                onChange(value);
+                const candidate =
+                  typeof value === 'function' ? value(state) : value;
+                const response = candidate.responses[activity.id];
+                if (
+                  response?.length === activity.interaction?.correct.length &&
+                  response.every(Boolean)
+                )
+                  submit(candidate);
+                else onChange(candidate);
               }}
               showFeedback={false}
             />
@@ -1087,7 +1202,31 @@ export function LessonPlayer({
             </>
           )}
           {activity.type === 'unlock' && (
-            <ModuleCompletion state={state} moduleIndex={state.level} />
+            <>
+              <ModuleCompletion state={state} moduleIndex={state.level} />
+              {done && (
+                <div className="lp-next-module" role="status">
+                  <span className="lp-module-seal">
+                    <Check size={30} />
+                  </span>
+                  <div>
+                    <p>
+                      {state.completed.length} di {course.modules.length} moduli
+                      completati
+                    </p>
+                    <strong>
+                      {course.modules[state.level + 1]
+                        ? `Sbloccato: modulo ${state.level + 2}`
+                        : 'Percorso completato'}
+                    </strong>
+                    <p>
+                      {course.modules[state.level + 1]?.title ||
+                        'Il tuo attestato è pronto.'}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </section>
       )}

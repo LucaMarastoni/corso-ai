@@ -1383,3 +1383,137 @@
     border-color: #91cfac;
   }
 }
+
+.lp-course-journey {
+  flex-shrink: 0;
+  padding: 12px 28px 14px;
+  border-bottom: 1px solid #e3ecfa;
+  background: #f6f9ff;
+}
+.lp-course-journey > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 14px;
+  color: #52658b;
+}
+.lp-course-journey strong {
+  color: #0b1b4b;
+}
+.lp-course-journey ol {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 8px;
+}
+.lp-course-journey li {
+  flex: 1;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  background: #e5ebf5;
+  color: #627394;
+  font-size: 12px;
+  font-weight: 650;
+  transition:
+    background 220ms,
+    box-shadow 220ms;
+}
+.lp-course-journey li.complete {
+  background: #daf2e5;
+  color: #147345;
+}
+.lp-course-journey li.current {
+  background: #0868ff;
+  color: white;
+  box-shadow: 0 0 0 3px #0868ff16;
+}
+.lp-course-journey li.complete.current {
+  box-shadow: 0 0 0 2px #54a779;
+}
+.lp-course-journey > p {
+  margin: 0;
+  font-size: 13px;
+  color: #52658b;
+}
+.lp-module-entry {
+  border-left: 3px solid #0868ff;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  background: #f1f6ff;
+  border-radius: 0 14px 14px 0;
+  animation: lp-fade 220ms both;
+}
+.lp-module-entry > span {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: #0868ff;
+  margin-bottom: 5px;
+}
+.lp-module-entry strong {
+  display: block;
+  color: #102454;
+  font-size: 18px;
+}
+.lp-module-entry p {
+  font-size: 15px;
+  line-height: 1.5;
+  color: #5a6d91;
+  margin: 6px 0 0;
+}
+.lp-next-module {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid #cddffd;
+  border-radius: 20px;
+  background: #eef5ff;
+  margin-top: 18px;
+  animation: lp-enter 240ms both;
+}
+.lp-module-seal {
+  display: grid;
+  place-items: center;
+  background: #0868ff;
+  color: white;
+  border-radius: 50%;
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+}
+.lp-next-module p {
+  margin: 4px 0;
+  font-size: 15px;
+  color: #536a96;
+  line-height: 1.5;
+}
+.lp-next-module strong {
+  font-size: 20px;
+  color: #0d285c;
+}
+.lp-answer-prompt {
+  font-size: 14px;
+  line-height: 1.35;
+  color: #617398;
+  text-align: right;
+  max-width: 150px;
+}
+@media (max-width: 480px) {
+  .lp-course-journey {
+    padding: 10px 20px 12px;
+  }
+  .lp-course-journey ol {
+    gap: 6px;
+  }
+  .lp-next-module {
+    padding: 18px;
+    gap: 12px;
+  }
+}

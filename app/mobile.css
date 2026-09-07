@@ -930,3 +930,49 @@
   .progress-profile .overview-metrics { display: flex; gap: var(--space-8); }
   .progress-profile .overview-metrics strong, .progress-profile .overview-metrics span { display: block; }
 }
+/* Multi-course catalog and data-driven interactions. */
+.course-loading { padding: var(--space-6); color: var(--ink-soft); }
+.course-catalog { display: none; }
+.academy-app[data-screen='home'] .course-shell > :not(.home-intro):not(.course-catalog) { display: none; }
+.academy-app[data-screen='home'] .course-catalog, .academy-app[data-screen='home'] .home-intro { display: block; }
+.catalog-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--space-6); margin-top: var(--space-4); }
+.catalog-card { min-width: 0; overflow: hidden; }
+.catalog-card.active-course { border-color: var(--primary); }
+.catalog-card :is(h2,p) { margin: 0; }
+.catalog-card h2 { font-size: var(--text-heading); line-height: var(--leading-heading); }
+.catalog-card > p:not(.eyebrow) { color: var(--ink-soft); }
+.catalog-cover { display: flex; align-items: center; justify-content: flex-start; position: relative; min-height: var(--space-16); }
+.catalog-cover img { width: 112px; height: 72px; object-fit: contain; }
+.catalog-cover > span { margin-left: auto; padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); background: var(--primary-soft); color: var(--primary); font-size: var(--text-caption); font-weight: 600; }
+.catalog-meta { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); color: var(--ink-soft); font-size: var(--text-small); }
+.catalog-meta span { display: flex; align-items: center; gap: var(--space-1); }
+.catalog-progress { display: grid; gap: var(--space-2); margin-top: auto; font-size: var(--text-small); }
+.catalog-select { display: flex; align-items: center; justify-content: space-between; min-height: var(--button-height); border: 1px solid var(--line); padding: var(--space-3) var(--space-4); border-radius: var(--radius-sm); color: var(--primary); text-decoration: none; font-weight: 600; }
+.catalog-card .course-continue { display: flex; justify-content: space-between; margin-top: 0; }
+.course-notice { max-width: 65ch; color: var(--ink-soft); font-size: var(--text-small); }
+.structured-interaction { display: grid; gap: var(--space-4); }
+.matching-row { display: grid; gap: var(--space-2); }
+.matching-row select { width: 100%; min-width: 0; min-height: var(--touch-target); border: 1px solid var(--input); border-radius: var(--radius-sm); background: var(--surface); color: var(--foreground); font: inherit; padding: var(--space-2); }
+.ordering-list { padding-left: var(--space-5); }
+.ordering-list li { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) 0; border-bottom: 1px solid var(--line); }
+.ordering-list li > span { flex: 1; min-width: 0; }
+.ordering-list .academy-button { flex-shrink: 0; }
+.exam-intro h2, .exam-result h2 { font-size: var(--text-heading-small); }
+.exam-running, .exam-result { display: grid; gap: var(--space-5); }
+.exam-status { color: var(--ink-soft); font-size: var(--text-small); }
+.exam-question { border: 0; border-bottom: 1px solid var(--line); padding: var(--space-4) 0; min-width: 0; }
+.exam-question legend { font-weight: 600; padding: 0; max-width: 100%; }
+.exam-question label { display: flex; align-items: flex-start; gap: var(--space-3); min-height: var(--touch-target); padding: var(--space-3); border-radius: var(--radius-sm); border: 1px solid var(--line); background: var(--surface); }
+.exam-question label:has([data-checked]) { border-color: var(--primary); background: var(--primary-soft); }
+.exam-question [data-slot='radio-group-item'] { margin-top: var(--space-1); flex-shrink: 0; }
+.exam-topic { border-top: 1px solid var(--line); padding-top: var(--space-3); }
+.exam-topic > span { display: block; font-size: var(--text-small); }
+.exam-topic .academy-button { justify-content: flex-start; text-align: left; }
+.exam-solutions summary { min-height: var(--touch-target); cursor: pointer; }
+.exam-solutions article { padding-block: var(--space-4); border-bottom: 1px solid var(--line); }
+.exam-solutions h3 { font-size: var(--text-large); }
+.exam-solutions p { color: var(--ink-soft); }
+@media (max-width: 768px) {
+  .catalog-grid { grid-template-columns: minmax(0,1fr); gap: var(--space-4); }
+  .catalog-card h2 { font-size: var(--text-heading); }
+}

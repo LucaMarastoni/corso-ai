@@ -1,5 +1,9 @@
+import { getCourse, courseActivityCount } from '../app/courses';
+import { ExamMode, StructuredInteraction } from './exam';
 import {
   useState,
+  useEffect,
+  useRef,
   type ReactNode,
   type Dispatch,
   type SetStateAction,
@@ -17,15 +21,9 @@ import {
   BadgeTile,
   StreakCard,
 } from './academy';
-import {
-  PHASES,
-  courseModules,
-  competencyDefinitions,
-  COURSE_ACTIVITY_COUNT,
-  type Activity,
-} from '../app/learning-model';
+import { PHASES, type Activity } from '../app/learning-model';
 import { learningLevel } from '../app/learning-config';
-import { achievements, type Achievement } from '../app/achievements';
+import { type Achievement } from '../app/achievements';
 import {
   type LearningState,
   activeStreak,
@@ -37,10 +35,11 @@ import {
   activityAvailable,
   canCompleteActivity,
   completeActivity,
+  continueMicroLesson,
   setDraft,
 } from '../app/progress';
 export function CompetencyList({ state }: { state: LearningState }) {
-  const acquired = competencyDefinitions.filter((item) =>
+  const acquired = getCourse(state.courseId).competencies.filter((item) =>
     Object.hasOwn(state.competencyAwards, item.id),
   );
   return (
@@ -57,7 +56,7 @@ export function CompetencyList({ state }: { state: LearningState }) {
                 <p>{item.description}</p>
                 <small>
                   Modulo {item.sourceModule + 1} ·{' '}
-                  {courseModules[item.sourceModule].title}
+                  {getCourse(state.courseId).modules[item.sourceModule].title}
                 </small>
                 <small>
                   {award.acquiredAt
@@ -77,8 +76,8 @@ export function CompetencyList({ state }: { state: LearningState }) {
           <h3>Stai costruendo la tua prima competenza</h3>
           <p>
             Completa il primo modulo per acquisire{' '}
-            <strong>Prompting fondamentale</strong>. La pratica e il laboratorio
-            saranno le tue evidenze.
+            <strong>{getCourse(state.courseId).competencies[0].name}</strong>.
+            La pratica e il laboratorio saranno le tue evidenze.
           </p>
         </div>
       )}
@@ -118,8 +117,11 @@ export function AchievementGrid({
     <section className="achievement-collection">
       <SectionHeader title="Achievement" />
       <div className="academy-badges">
-        {achievements
-          .slice(0, expanded ? achievements.length : 3)
+        {getCourse(state.courseId)
+          .achievements.slice(
+            0,
+            expanded ? getCourse(state.courseId).achievements.length : 3,
+          )
           .map((item) => (
             <BadgeTile
               key={item.id}
@@ -141,10 +143,12 @@ export function AchievementGrid({
   );
 }
 export function NextMilestone({ state }: { state: LearningState }) {
-  const pending = courseModules.findIndex(
+  const pending = getCourse(state.courseId).modules.findIndex(
     (item) => !isActivityComplete(state, `${item.id}:unlock`),
   );
-  const next = achievements.find((item) => !item.earned(state));
+  const next = getCourse(state.courseId).achievements.find(
+    (item) => !item.earned(state),
+  );
   if (pending < 0 && !next)
     return (
       <AcademyCard tone="success">
@@ -152,14 +156,16 @@ export function NextMilestone({ state }: { state: LearningState }) {
         <p>Il tuo prossimo passo è applicare le competenze nel lavoro.</p>
       </AcademyCard>
     );
-  const targetModule = pending >= 0 ? courseModules[pending] : null;
+  const targetModule =
+    pending >= 0 ? getCourse(state.courseId).modules[pending] : null;
   const moduleAchievement = targetModule
-    ? achievements.find(
+    ? getCourse(state.courseId).achievements.find(
         (item) => item.id === targetModule.achievementId && !item.earned(state),
       )
     : null;
   const name = targetModule
-    ? moduleAchievement?.name || competencyDefinitions[pending].name
+    ? moduleAchievement?.name ||
+      getCourse(state.courseId).competencies[pending].name
     : next!.name;
   const total = targetModule
     ? targetModule.activities.filter((a) => a.phase !== 'unlock').length
@@ -202,7 +208,8 @@ export function LearningCertificateCard({
   onDownload: () => void;
 }) {
   const remaining =
-    competencyDefinitions.length - Object.keys(state.competencyAwards).length;
+    getCourse(state.courseId).competencies.length -
+    Object.keys(state.competencyAwards).length;
   return (
     <AcademyCard tone="reward">
       <small className="eyebrow">
@@ -265,7 +272,7 @@ export function ProgressProfile({
         <p>Le competenze che stai costruendo nel tuo percorso.</p>
       </header>
       <AcademyCard className="progress-overview">
-        <h2>Basi di Intelligenza Artificiale</h2>
+        <h2>{getCourse(state.courseId).title}</h2>
         <strong className="progress-display">
           {completion}
           <span>%</span>
@@ -275,13 +282,15 @@ export function ProgressProfile({
         <div className="overview-metrics">
           <div>
             <strong>
-              {state.completed.length}/{courseModules.length}
+              {state.completed.length}/
+              {getCourse(state.courseId).modules.length}
             </strong>
             <span>Moduli</span>
           </div>
           <div>
             <strong>
-              {completedActivityCount(state)}/{COURSE_ACTIVITY_COUNT}
+              {completedActivityCount(state)}/
+              {courseActivityCount(state.courseId)}
             </strong>
             <span>Attività</span>
           </div>
@@ -311,7 +320,7 @@ export function LearningPhaseHeader({
   state: LearningState;
   moduleIndex: number;
 }) {
-  const courseModule = courseModules[moduleIndex],
+  const courseModule = getCourse(state.courseId).modules[moduleIndex],
     activity = courseModule.activities[state.step];
   const phase = courseModule.phases.find((p) => p.id === activity.phase)!;
   return (
@@ -402,13 +411,13 @@ export function ModuleCompletion({
   state: LearningState;
   moduleIndex: number;
 }) {
-  const courseModule = courseModules[moduleIndex],
-    competency = competencyDefinitions[moduleIndex];
+  const courseModule = getCourse(state.courseId).modules[moduleIndex],
+    competency = getCourse(state.courseId).competencies[moduleIndex];
   const earned = courseModule.activities.reduce(
     (sum, activity) => sum + (state.completedActivities[activity.id]?.xp || 0),
     0,
   );
-  const achievement = achievements.find(
+  const achievement = getCourse(state.courseId).achievements.find(
     (item) => item.id === courseModule.achievementId,
   );
   const done = phaseComplete(state, moduleIndex, 'unlock');
@@ -438,7 +447,8 @@ export function ModuleCompletion({
         </div>
       )}
       <small>
-        {state.completed.length}/{courseModules.length} moduli completati
+        {state.completed.length}/{getCourse(state.courseId).modules.length}{' '}
+        moduli completati
       </small>
     </AcademyCard>
   );
@@ -460,15 +470,27 @@ export function LearningExperience({
 }) {
   const [reward, setReward] = useState<{ id: string; xp: number } | null>(null);
   const n = state.level,
-    courseModule = courseModules[n],
+    courseModule = getCourse(state.courseId).modules[n],
     activity = courseModule.activities[state.step];
   const done = isActivityComplete(state, activity.id),
     available = activityAvailable(state, n, activity);
   const completion = state.completedActivities[activity.id];
+  const advanceFocus = useRef(false);
+  useEffect(() => {
+    if (advanceFocus.current) {
+      document.querySelector<HTMLElement>('.learning-activity h1')?.focus();
+      advanceFocus.current = false;
+    }
+  }, [activity.id]);
   const finish = () => {
     const next = completeActivity(state, n, activity.id);
     setReward({ id: activity.id, xp: score(next) - score(state) });
-    onChange((current) => completeActivity(current, n, activity.id));
+    advanceFocus.current = activity.type === 'microLesson';
+    onChange((current) =>
+      activity.type === 'microLesson'
+        ? continueMicroLesson(current, n, activity.id)
+        : completeActivity(current, n, activity.id),
+    );
   };
   const nextIndex = Math.min(
     courseModule.activities.length - 1,
@@ -524,10 +546,24 @@ export function LearningExperience({
                 </InsightCard>
                 {audio}
                 <p className="micro-note">
-                  Conferma di aver letto e compreso il concetto prima di
-                  continuare. Non basta aprire questa pagina.
+                  Selezionando Continua confermi di aver letto il concetto prima
+                  di continuare. Non basta aprire questa pagina.
                 </p>
               </>
+            )}
+            {activity.interaction && (
+              <StructuredInteraction
+                activity={activity}
+                state={state}
+                onChange={onChange}
+              />
+            )}
+            {activity.type === 'exam' && (
+              <ExamMode
+                state={state}
+                onChange={onChange}
+                onReview={onNavigate}
+              />
             )}
             {(activity.type === 'textInput' ||
               activity.type === 'scenario') && (
@@ -555,7 +591,7 @@ export function LearningExperience({
                       },
                     }))
                   }
-                  aria-label="Scegli il prompt più adatto"
+                  aria-label={`Scegli ${activity.questionLabel ? 'l’opzione' : 'il prompt'} più adatto`}
                 >
                   {activity.question.options.map((text, i) => (
                     <label
@@ -563,7 +599,10 @@ export function LearningExperience({
                       className={`prompt-card ${state.answers[activity.id] === i ? 'chosen' : ''}`}
                     >
                       <div className="prompt-top">
-                        <strong>PROMPT {String.fromCharCode(65 + i)}</strong>
+                        <strong>
+                          {activity.questionLabel?.toUpperCase() || 'PROMPT'}{' '}
+                          {String.fromCharCode(65 + i)}
+                        </strong>
                         <RadioGroupItem value={String(i)} />
                       </div>
                       <p>{text}</p>
@@ -607,15 +646,17 @@ export function LearningExperience({
               : 'Attività completata. Puoi ripassare senza duplicare gli XP.'}
           </p>
         )}
-        {done && activity.type !== 'unlock' && (
-          <AcademyButton
-            variant="ghost"
-            disabled={!canCompleteActivity(state, n, activity)}
-            onClick={finish}
-          >
-            Conferma il ripasso
-          </AcademyButton>
-        )}
+        {done &&
+          activity.type !== 'unlock' &&
+          activity.type !== 'microLesson' && (
+            <AcademyButton
+              variant="ghost"
+              disabled={!canCompleteActivity(state, n, activity)}
+              onClick={finish}
+            >
+              Conferma il ripasso
+            </AcademyButton>
+          )}
         <output className="xp-reward" aria-live="polite">
           {reward?.id === activity.id
             ? reward.xp > 0
@@ -633,27 +674,33 @@ export function LearningExperience({
           <ArrowLeft size={16} />
           Indietro
         </AcademyButton>
-        {!done ? (
+        {!done && activity.type === 'exam' ? null : !done ? (
           <AcademyButton
             disabled={!ready || !canCompleteActivity(state, n, activity)}
             onClick={finish}
           >
             {activity.type === 'microLesson'
-              ? 'Ho letto e compreso'
+              ? 'Continua'
               : activity.type === 'unlock'
                 ? 'Sblocca il risultato'
                 : activity.type === 'textInput'
                   ? 'Conferma la pratica'
-                  : activity.type === 'comparison'
+                  : activity.phase === 'verify'
                     ? 'Conferma la verifica'
                     : 'Completa l’applicazione'}
           </AcademyButton>
         ) : activity.type !== 'unlock' ? (
-          <AcademyButton onClick={() => onNavigate(n, nextIndex)}>
+          <AcademyButton
+            onClick={
+              activity.type === 'microLesson'
+                ? finish
+                : () => onNavigate(n, nextIndex)
+            }
+          >
             Continua
             <ArrowRight size={18} />
           </AcademyButton>
-        ) : n < courseModules.length - 1 ? (
+        ) : n < getCourse(state.courseId).modules.length - 1 ? (
           <AcademyButton onClick={() => onNavigate(n + 1)}>
             Vai al Modulo {n + 2}
             <ArrowRight size={18} />
@@ -683,12 +730,15 @@ export function LearningExperience({
           ))}
       </nav>
       <details className="reference lesson-reference">
-        <summary>Il brief di Officina Pedale</summary>
-        <p>
-          Attività inventata. Ripara bici urbane, esegue manutenzione freni,
-          sostituisce camere d’aria. Appuntamenti tramite modulo di contatto.
-          Prezzi, orari, indirizzo e tempi non disponibili.
-        </p>
+        <summary>{getCourse(state.courseId).reference.title}</summary>
+        <p>{getCourse(state.courseId).reference.text}</p>
+        {getCourse(state.courseId).sources?.map((source) => (
+          <p key={source.url}>
+            <a href={source.url} target="_blank" rel="noreferrer">
+              {source.title}
+            </a>
+          </p>
+        ))}
       </details>
     </article>
   );

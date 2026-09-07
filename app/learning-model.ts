@@ -26,12 +26,27 @@ export const PHASES: { id: PhaseId; name: string; purpose: string }[] = [
 ];
 export type Activity = {
   id: string;
-  type: 'microLesson' | 'textInput' | 'comparison' | 'scenario' | 'unlock';
+  type:
+    | 'microLesson'
+    | 'textInput'
+    | 'comparison'
+    | 'scenario'
+    | 'unlock'
+    | 'multipleChoice'
+    | 'matching'
+    | 'ordering'
+    | 'exam';
   phase: PhaseId;
   title: string;
   description: string;
   completionRule: {
-    kind: 'acknowledge' | 'textChecklist' | 'correctAnswer' | 'allPhases';
+    kind:
+      | 'acknowledge'
+      | 'textChecklist'
+      | 'correctAnswer'
+      | 'allPhases'
+      | 'correctSequence'
+      | 'examPassed';
     minLength?: number;
     checklist?: string[];
   };
@@ -39,6 +54,15 @@ export type Activity = {
   slide?: (typeof levels)[number]['slides'][number];
   question?: (typeof levels)[number]['challenges'][number];
   model?: string;
+  questionLabel?: string;
+  interaction?: {
+    items: { id: string; label: string }[];
+    options?: { id: string; label: string }[];
+    correct: string[];
+    explanation: string;
+    hint: string;
+  };
+  sourceUrls?: string[];
 };
 const practice = [
   [

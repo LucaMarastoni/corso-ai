@@ -1,11 +1,9 @@
+import { PHASES, type Activity } from './learning-model.ts';
 import {
-  courseModules,
-  competencyDefinitions,
-  COURSE_ACTIVITY_COUNT,
-  PHASES,
-  type Activity,
-} from './learning-model.ts';
-import { achievements } from './achievements.ts';
+  getCourse,
+  DEFAULT_COURSE_ID,
+  courseActivityCount,
+} from './courses.ts';
 export const STORE = 'ai-course-journey-v3';
 export const LEGACY_STORE = 'ai-course-journey-v2';
 export type Completion = {
@@ -22,6 +20,9 @@ export type CompetencyAward = {
 };
 export type LearningState = {
   progressVersion: 3;
+  courseId: string;
+  responses: Record<string, string[]>;
+  examAttempts: ExamAttempt[];
   level: number;
   step: number;
   completedActivities: Record<string, Completion>;
@@ -47,6 +48,9 @@ export type LearningState = {
 };
 export const initialState: LearningState = {
   progressVersion: 3,
+  courseId: DEFAULT_COURSE_ID,
+  responses: {},
+  examAttempts: [],
   level: 0,
   step: 0,
   completedActivities: {},
@@ -74,14 +78,16 @@ export const score = (s: LearningState) =>
 export const completedActivityCount = (s: LearningState) =>
   Object.keys(s.completedActivities).length;
 export const completionPercent = (s: LearningState) =>
-  Math.round((completedActivityCount(s) / COURSE_ACTIVITY_COUNT) * 100);
+  Math.round(
+    (completedActivityCount(s) / courseActivityCount(s.courseId)) * 100,
+  );
 function project(s: LearningState): LearningState {
   const seen: string[] = [],
     solved: string[] = [],
     completed: number[] = [],
     notes: Record<string, string> = {},
     checks: Record<string, number[]> = {};
-  courseModules.forEach((courseModule, n) => {
+  getCourse(s.courseId).modules.forEach((courseModule, n) => {
     courseModule.activities.forEach((activity) => {
       if (!isActivityComplete(s, activity.id)) return;
       if (activity.phase === 'learn')
@@ -102,14 +108,14 @@ function project(s: LearningState): LearningState {
 export function unlock(s: LearningState) {
   let n = 0;
   while (
-    n < courseModules.length - 1 &&
-    isActivityComplete(s, `${courseModules[n].id}:unlock`)
+    n < getCourse(s.courseId).modules.length - 1 &&
+    isActivityComplete(s, `${getCourse(s.courseId).modules[n].id}:unlock`)
   )
     n++;
   return n;
 }
 export function phaseComplete(s: LearningState, n: number, phase: string) {
-  const activities = courseModules[n]?.phases.find(
+  const activities = getCourse(s.courseId).modules[n]?.phases.find(
     (item) => item.id === phase,
   )?.activities;
   return (
@@ -130,7 +136,7 @@ export function activityAvailable(
 }
 export function canFinish(s: LearningState, n: number) {
   return (
-    !!courseModules[n] &&
+    !!getCourse(s.courseId).modules[n] &&
     PHASES.filter((phase) => phase.id !== 'unlock').every((phase) =>
       phaseComplete(s, n, phase.id),
     )
@@ -152,6 +158,20 @@ export function canCompleteActivity(
     );
   if (rule.kind === 'correctAnswer')
     return s.answers[activity.id] === activity.question?.correct;
+  if (rule.kind === 'correctSequence')
+    return (
+      !!activity.interaction &&
+      activity.interaction.correct.every(
+        (id, i) => s.responses[activity.id]?.[i] === id,
+      )
+    );
+  if (rule.kind === 'examPassed')
+    return s.examAttempts.some(
+      (attempt) =>
+        attempt.submittedAt &&
+        examResult(s, attempt).percent >=
+          (getCourse(s.courseId).exam?.passPercent || 80),
+    );
   if (rule.kind === 'allPhases') return canFinish(s, n);
   return true;
 }
@@ -174,17 +194,20 @@ function collectAwards(
 ): LearningState {
   const achievementAwards = { ...s.achievementAwards },
     competencyAwards = { ...s.competencyAwards };
-  for (const item of achievements) {
+  for (const item of getCourse(s.courseId).achievements) {
     const condition = item.unlockCondition;
     const eligible =
       condition.kind === 'moduleComplete'
-        ? isActivityComplete(s, `${courseModules[condition.module].id}:unlock`)
+        ? isActivityComplete(
+            s,
+            `${getCourse(s.courseId).modules[condition.module].id}:unlock`,
+          )
         : s.streakDays >= condition.days;
     if (eligible && !Object.hasOwn(achievementAwards, item.id))
       achievementAwards[item.id] = { earnedAt: at, source };
   }
-  for (const item of competencyDefinitions) {
-    const courseModule = courseModules[item.sourceModule];
+  for (const item of getCourse(s.courseId).competencies) {
+    const courseModule = getCourse(s.courseId).modules[item.sourceModule];
     if (
       isActivityComplete(s, `${courseModule.id}:unlock`) &&
       !Object.hasOwn(competencyAwards, item.id)
@@ -207,7 +230,9 @@ export function completeActivity(
   id: string,
   now = new Date().toISOString(),
 ): LearningState {
-  const activity = courseModules[n]?.activities.find((item) => item.id === id);
+  const activity = getCourse(s.courseId).modules[n]?.activities.find(
+    (item) => item.id === id,
+  );
   if (!activity || !canCompleteActivity(s, n, activity)) return s;
   const at = validTimestamp(now) ? now : new Date().toISOString();
   const day = new Date(at).toLocaleDateString('en-CA');
@@ -221,11 +246,10 @@ export function completeActivity(
         [id]: {
           completedAt: at,
           xp: activity.xpReward,
-          evidence:
-            activity.type === 'comparison'
-              ? `Risposta ${String.fromCharCode(65 + s.answers[id])}: ${activity.question?.why}`
-              : s.drafts[id]?.trim() ||
-                'Conferma esplicita di lettura e comprensione.',
+          evidence: activity.question
+            ? `Risposta ${String.fromCharCode(65 + s.answers[id])}: ${activity.question?.why}`
+            : s.drafts[id]?.trim() ||
+              'Conferma esplicita di lettura e comprensione.',
           source: 'current',
         },
       },
@@ -235,7 +259,7 @@ export function completeActivity(
   return project(collectAwards(next, at, 'current'));
 }
 export const complete = (s: LearningState, n: number) =>
-  completeActivity(s, n, `${courseModules[n]?.id}:unlock`);
+  completeActivity(s, n, `${getCourse(s.courseId).modules[n]?.id}:unlock`);
 export function setDraft(
   s: LearningState,
   id: string,
@@ -251,11 +275,14 @@ export function issueCertificate(
 ) {
   const name = profileName.trim().replace(/\s+/g, ' ').slice(0, 80);
   if (
-    s.completed.length !== courseModules.length ||
-    Object.keys(s.competencyAwards).length !== competencyDefinitions.length ||
+    s.completed.length !== getCourse(s.courseId).modules.length ||
+    Object.keys(s.competencyAwards).length !==
+      getCourse(s.courseId).competencies.length ||
     name.length < 3 ||
     !validDate(completionDate) ||
-    !/^PAI-\d{4}-[A-Z0-9]{8}$/.test(certificateId)
+    !new RegExp(
+      `^${getCourse(s.courseId).certificatePrefix}-\\d{4}-[A-Z0-9]{8}$`,
+    ).test(certificateId)
   )
     return s;
   if (s.certificateId) return s;
@@ -283,15 +310,23 @@ export function serialize(s: LearningState) {
   } = s;
   return JSON.stringify(canonical);
 }
-export function restore(raw: string): LearningState {
+export function restore(
+  raw: string,
+  courseId = DEFAULT_COURSE_ID,
+): LearningState {
   let x: Record<string, unknown>;
   try {
     x = record(JSON.parse(raw));
   } catch {
-    return project({ ...initialState });
+    return project({ ...initialState, courseId: getCourse(courseId).id });
   }
+  if (typeof x.courseId === 'string' && x.courseId !== getCourse(courseId).id)
+    return { ...initialState, courseId: getCourse(courseId).id };
   let s: LearningState = {
     ...initialState,
+    courseId: getCourse(courseId).id,
+    responses: {},
+    examAttempts: [],
     completedActivities: {},
     drafts: {},
     activityChecks: {},
@@ -305,9 +340,15 @@ export function restore(raw: string): LearningState {
     ? Math.max(0, Math.min(3650, x.streakDays as number))
     : 0;
   s.lastStudyDate = validDate(x.lastStudyDate) ? x.lastStudyDate : '';
-  const legacy = x.progressVersion !== 3;
-  for (const courseModule of courseModules) {
+  const legacy =
+    x.progressVersion !== 3 && !!getCourse(s.courseId).legacyStorageKey;
+  for (const courseModule of getCourse(s.courseId).modules) {
     for (const activity of courseModule.activities) {
+      const response = record(x.responses)[activity.id];
+      if (Array.isArray(response) && activity.interaction)
+        s.responses[activity.id] = response
+          .slice(0, activity.interaction.items.length)
+          .map((value) => (typeof value === 'string' ? value : ''));
       const draft = record(x.drafts)[activity.id];
       if (typeof draft === 'string')
         s.drafts[activity.id] = draft.slice(0, 20000);
@@ -380,7 +421,7 @@ export function restore(raw: string): LearningState {
     const seen = legacyList(x.seen),
       solved = legacyList(x.solved);
     let contiguous = true;
-    courseModules.forEach((courseModule, n) => {
+    getCourse(s.courseId).modules.forEach((courseModule, n) => {
       const add = (
         id: string,
         xp: number,
@@ -450,10 +491,11 @@ export function restore(raw: string): LearningState {
         source: 'legacy',
       };
   }
+  s.examAttempts = restoreExamAttempts(s, x.examAttempts);
   // Discard inconsistent later-phase records, but retain previously passed legacy verifications
   // while the learner completes the newly introduced practice.
-  for (let n = 0; n < courseModules.length; n++) {
-    for (const activity of courseModules[n].activities) {
+  for (let n = 0; n < getCourse(s.courseId).modules.length; n++) {
+    for (const activity of getCourse(s.courseId).modules[n].activities) {
       const completion = s.completedActivities[activity.id];
       if (!completion) continue;
       if (
@@ -466,7 +508,7 @@ export function restore(raw: string): LearningState {
     }
   }
   s = project(s);
-  for (const item of achievements) {
+  for (const item of getCourse(s.courseId).achievements) {
     const saved = record(record(x.achievementAwards)[item.id]);
     if (Object.keys(saved).length)
       s.achievementAwards[item.id] = {
@@ -474,7 +516,7 @@ export function restore(raw: string): LearningState {
         source: saved.source === 'legacy' ? 'legacy' : 'current',
       };
   }
-  for (const item of competencyDefinitions) {
+  for (const item of getCourse(s.courseId).competencies) {
     const saved = record(record(x.competencyAwards)[item.id]);
     if (s.completed.includes(item.sourceModule) && Object.keys(saved).length)
       s.competencyAwards[item.id] = {
@@ -499,18 +541,29 @@ export function restore(raw: string): LearningState {
   s.step = Number.isInteger(mappedStep)
     ? Math.max(
         0,
-        Math.min(courseModules[s.level].activities.length - 1, mappedStep),
+        Math.min(
+          getCourse(s.courseId).modules[s.level].activities.length - 1,
+          mappedStep,
+        ),
       )
     : 0;
-  if (!activityAvailable(s, s.level, courseModules[s.level].activities[s.step]))
-    s.step = courseModules[s.level].activities.findIndex(
+  if (
+    !activityAvailable(
+      s,
+      s.level,
+      getCourse(s.courseId).modules[s.level].activities[s.step],
+    )
+  )
+    s.step = getCourse(s.courseId).modules[s.level].activities.findIndex(
       (a) => activityAvailable(s, s.level, a) && !isActivityComplete(s, a.id),
     );
   if (s.step < 0) s.step = 0;
   if (
-    s.completed.length === courseModules.length &&
+    s.completed.length === getCourse(s.courseId).modules.length &&
     typeof x.certificateId === 'string' &&
-    /^PAI-\d{4}-[A-Z0-9]{8}$/.test(x.certificateId) &&
+    new RegExp(
+      `^${getCourse(s.courseId).certificatePrefix}-\\d{4}-[A-Z0-9]{8}$`,
+    ).test(x.certificateId) &&
     validDate(x.completionDate)
   ) {
     s.certificateId = x.certificateId;
@@ -527,4 +580,214 @@ export function activeStreak(
     Date.parse(`${today}T00:00:00Z`) -
     Date.parse(`${s.lastStudyDate}T00:00:00Z`);
   return gap === 0 || gap === 86400000 ? s.streakDays : 0;
+}
+
+export type ExamAttempt = {
+  id: string;
+  startedAt: string;
+  questionIds: string[];
+  answers: Record<string, number>;
+  submittedAt: string | null;
+};
+function shuffle<T>(items: T[], random: () => number) {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+export function startExam(
+  s: LearningState,
+  random = Math.random,
+  now = new Date().toISOString(),
+): LearningState {
+  const exam = getCourse(s.courseId).exam;
+  const examModule = getCourse(s.courseId).modules.findIndex((module) =>
+    module.activities.some((a) => a.type === 'exam'),
+  );
+  const activity = getCourse(s.courseId).modules[examModule]?.activities.find(
+    (a) => a.type === 'exam',
+  );
+  if (
+    !exam ||
+    !activity ||
+    !activityAvailable(s, examModule, activity) ||
+    s.examAttempts.some((attempt) => !attempt.submittedAt)
+  )
+    return s;
+  const topics = [...new Set(exam.questions.map((q) => q.sourceModule))];
+  const selected = topics.flatMap((n) =>
+    shuffle(
+      exam.questions.filter((q) => q.sourceModule === n),
+      random,
+    ).slice(0, exam.perTopic),
+  );
+  const attempt: ExamAttempt = {
+    id: `attempt-${now}-${s.examAttempts.length}`,
+    startedAt: now,
+    questionIds: shuffle(selected, random)
+      .slice(0, exam.questionCount)
+      .map((q) => q.id),
+    answers: {},
+    submittedAt: null,
+  };
+  return { ...s, examAttempts: [...s.examAttempts.slice(-9), attempt] };
+}
+export function answerExam(
+  s: LearningState,
+  id: string,
+  answer: number,
+): LearningState {
+  const attempt = s.examAttempts.at(-1),
+    q = getCourse(s.courseId).exam?.questions.find((q) => q.id === id);
+  if (
+    !attempt ||
+    attempt.submittedAt ||
+    !attempt.questionIds.includes(id) ||
+    !q ||
+    !Number.isInteger(answer) ||
+    answer < 0 ||
+    answer >= q.options.length
+  )
+    return s;
+  return {
+    ...s,
+    examAttempts: s.examAttempts.map((a) =>
+      a === attempt ? { ...a, answers: { ...a.answers, [id]: answer } } : a,
+    ),
+  };
+}
+export function examResult(s: LearningState, attempt: ExamAttempt) {
+  const questions =
+    getCourse(s.courseId).exam?.questions.filter((q) =>
+      attempt.questionIds.includes(q.id),
+    ) || [];
+  const correct = questions.filter(
+    (q) => attempt.answers[q.id] === q.correct,
+  ).length;
+  const topics = [...new Set(questions.map((q) => q.sourceModule))].map(
+    (sourceModule) => {
+      const items = questions.filter((q) => q.sourceModule === sourceModule);
+      const passed = items.filter(
+        (q) => attempt.answers[q.id] === q.correct,
+      ).length;
+      return {
+        sourceModule,
+        title: getCourse(s.courseId).modules[sourceModule].title,
+        correct: passed,
+        total: items.length,
+        weak: passed < items.length,
+      };
+    },
+  );
+  return {
+    correct,
+    total: questions.length,
+    percent: questions.length
+      ? Math.round((correct / questions.length) * 100)
+      : 0,
+    topics,
+  };
+}
+export function submitExam(
+  s: LearningState,
+  now = new Date().toISOString(),
+): LearningState {
+  const attempt = s.examAttempts.at(-1),
+    exam = getCourse(s.courseId).exam;
+  if (
+    !exam ||
+    !attempt ||
+    attempt.submittedAt ||
+    attempt.questionIds.length !== exam.questionCount ||
+    attempt.questionIds.some((id) => attempt.answers[id] === undefined)
+  )
+    return s;
+  let next = {
+    ...s,
+    examAttempts: s.examAttempts.map((a) =>
+      a === attempt ? { ...a, submittedAt: now } : a,
+    ),
+  };
+  const n = getCourse(s.courseId).modules.findIndex((module) =>
+    module.activities.some((a) => a.type === 'exam'),
+  );
+  const activity = getCourse(s.courseId).modules[n]?.activities.find(
+    (a) => a.type === 'exam',
+  );
+  if (activity) next = completeActivity(next, n, activity.id, now);
+  return next;
+}
+function restoreExamAttempts(s: LearningState, value: unknown): ExamAttempt[] {
+  const exam = getCourse(s.courseId).exam;
+  if (!exam || !Array.isArray(value)) return [];
+  return value
+    .slice(-10)
+    .flatMap((raw) => {
+      const x = record(raw);
+      if (
+        typeof x.id !== 'string' ||
+        !validTimestamp(x.startedAt) ||
+        !Array.isArray(x.questionIds)
+      )
+        return [];
+      const ids = x.questionIds.filter(
+        (id): id is string =>
+          typeof id === 'string' && exam.questions.some((q) => q.id === id),
+      );
+      if (ids.length !== exam.questionCount || new Set(ids).size !== ids.length)
+        return [];
+      const answers: Record<string, number> = {};
+      for (const id of ids) {
+        const q = exam.questions.find((q) => q.id === id)!;
+        const answer = record(x.answers)[id];
+        if (
+          Number.isInteger(answer) &&
+          Number(answer) >= 0 &&
+          Number(answer) < q.options.length
+        )
+          answers[id] = Number(answer);
+      }
+      const submittedAt =
+        validTimestamp(x.submittedAt) &&
+        ids.every((id) => answers[id] !== undefined)
+          ? x.submittedAt
+          : null;
+      return [
+        {
+          id: x.id.slice(0, 150),
+          startedAt: x.startedAt,
+          questionIds: ids,
+          answers,
+          submittedAt,
+        },
+      ];
+    })
+    .filter(
+      (attempt, index, array) =>
+        attempt.submittedAt || index === array.length - 1,
+    );
+}
+
+/** Confirm one micro-lesson and advance atomically, including the phase boundary. */
+export function continueMicroLesson(
+  s: LearningState,
+  moduleIndex: number,
+  activityId: string,
+  now = new Date().toISOString(),
+): LearningState {
+  const activities = getCourse(s.courseId).modules[moduleIndex]?.activities;
+  const index = activities?.findIndex((a) => a.id === activityId) ?? -1;
+  if (
+    !activities ||
+    index < 0 ||
+    activities[index].type !== 'microLesson' ||
+    s.level !== moduleIndex ||
+    s.step !== index
+  )
+    return s;
+  const next = completeActivity(s, moduleIndex, activityId, now);
+  if (!isActivityComplete(next, activityId)) return s;
+  return { ...next, step: Math.min(index + 1, activities.length - 1) };
 }

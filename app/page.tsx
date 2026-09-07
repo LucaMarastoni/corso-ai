@@ -5,9 +5,6 @@ import {
   CourseHeroCard,
   ProfileContent,
   BottomNavigation,
-  ProgressSummary,
-  JourneyCard,
-  ObjectiveCard,
   LessonHeader,
   type Screen,
 } from '../components/academy';
@@ -17,7 +14,9 @@ import {
   LevelCard,
   NextMilestone,
 } from '../components/learning';
-import { courseModules, competencyDefinitions } from './learning-model';
+import { getCourse, DEFAULT_COURSE_ID } from './courses';
+import type { Course } from './course-types';
+import { SkillUpHome } from '../components/skillup-home';
 import { learningLevel } from './learning-config';
 import {
   Dialog,
@@ -36,8 +35,7 @@ import {
   Download,
   Share2,
 } from 'lucide-react';
-import { levels } from './journey';
-import { achievements, type Achievement } from './achievements';
+import { type Achievement } from './achievements';
 import {
   initialState,
   score,
@@ -45,21 +43,11 @@ import {
   restore,
   type LearningState,
   completionPercent,
-  STORE,
-  LEGACY_STORE,
   serialize,
   completedActivityCount,
   activityAvailable,
   issueCertificate,
 } from './progress';
-const levelOutcomes = [
-  'Riconosci dove l’AI può aiutarti e dove serve ancora il tuo giudizio.',
-  'Trasforma un’idea vaga in una consegna chiara e verificabile.',
-  'Correggi una prima bozza con feedback precisi e utilizzabili.',
-  'Individua fatti inventati, promesse fragili e dati da verificare.',
-  'Lavora con esempi realistici senza esporre informazioni sensibili.',
-  'Consegna un kit di contenuti completo, coerente e controllato.',
-];
 
 export const dynamic = 'force-static';
 
@@ -116,8 +104,42 @@ function saveBlob(blob: Blob, name: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 export default function Home() {
+  const [courseId, setCourseId] = useState<string | null>(null);
+  useEffect(() => {
+    const select = () =>
+      setCourseId(
+        getCourse(
+          new URLSearchParams(window.location.search).get('course') ||
+            DEFAULT_COURSE_ID,
+        ).id,
+      );
+    const timer = setTimeout(select, 0);
+    return () => clearTimeout(timer);
+  }, []);
+  return courseId ? (
+    <CourseApp key={courseId} course={getCourse(courseId)} />
+  ) : (
+    <p className="course-loading">Caricamento dei corsi…</p>
+  );
+}
+function CourseApp({ course }: { course: Course }) {
+  const courseModules = course.modules,
+    competencyDefinitions = course.competencies,
+    achievements = course.achievements;
+  const STORE = course.storageKey;
   const [screen, setScreen] = useState<Screen>('home');
-  const [state, setState] = useState<LearningState>(initialState),
+
+  useEffect(() => {
+    document.title =
+      screen === 'home'
+        ? 'SkillUp · Competenze oggi. Opportunità domani.'
+        : `${course.title} · AI Academy`;
+  }, [course.title, screen]);
+
+  const [state, setState] = useState<LearningState>({
+      ...initialState,
+      courseId: course.id,
+    }),
     [ready, setReady] = useState(false),
     [storage, setStorage] = useState(true);
   const [selectedAchievement, setSelectedAchievement] =
@@ -140,10 +162,9 @@ export default function Home() {
     navTriggered = useRef(false);
   const l = state.level,
     step = state.step,
-    level = levels[l],
     xp = score(state),
     slide = courseModules[l].activities[step]?.slide || null,
-    finished = state.completed.length === 6;
+    finished = state.completed.length === courseModules.length;
   const stop = useCallback(() => {
     audioRun.current++;
     if (startWatch.current) clearTimeout(startWatch.current);
@@ -176,7 +197,11 @@ export default function Home() {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORE);
-      let source = raw || localStorage.getItem(LEGACY_STORE);
+      let source =
+        raw ||
+        (course.legacyStorageKey
+          ? localStorage.getItem(course.legacyStorageKey)
+          : null);
       if (raw) {
         try {
           const parsed = JSON.parse(raw);
@@ -184,15 +209,21 @@ export default function Home() {
             throw new Error('Stato non valido');
         } catch {
           localStorage.setItem(`${STORE}-recovery`, raw);
-          source = localStorage.getItem(LEGACY_STORE);
+          source = course.legacyStorageKey
+            ? localStorage.getItem(course.legacyStorageKey)
+            : null;
         }
       }
-      setState(source ? restore(source) : initialState);
+      setState(
+        source
+          ? restore(source, course.id)
+          : { ...initialState, courseId: course.id },
+      );
     } catch {
       setStorage(false);
     }
     setReady(true);
-  }, []);
+  }, [STORE, course.id, course.legacyStorageKey]);
   useEffect(() => {
     if (!ready) return;
     try {
@@ -200,7 +231,7 @@ export default function Home() {
     } catch {
       setStorage(false);
     }
-  }, [state, ready]);
+  }, [state, ready, STORE]);
   useEffect(() => {
     const ok =
       'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
@@ -372,10 +403,10 @@ export default function Home() {
     say(0);
   }
   function download() {
-    const text = levels
+    const text = courseModules
       .map(
         (x, n) =>
-          `LIVELLO ${n + 1}: ${x.title}\n${x.lab}\n\nIL MIO LAVORO\n${state.notes[n] || '(non ancora svolto)'}\n\nPROVA\n${state.drafts[`module-${n + 1}:practice`] || '(non ancora svolta)'}`,
+          `LIVELLO ${n + 1}: ${x.title}\n${x.activities.find((a) => a.phase === 'apply')?.description || ''}\n\nIL MIO LAVORO\n${state.notes[n] || '(non ancora svolto)'}\n\nPROVA\n${state.drafts[`${x.id}:practice`] || '(non ancora svolta)'}`,
       )
       .join('\n\n---\n\n');
     const u = URL.createObjectURL(
@@ -394,7 +425,7 @@ export default function Home() {
     const date = new Date().toLocaleDateString('en-CA');
     const certificateId =
       current.certificateId ||
-      `PAI-${new Date().getFullYear()}-${crypto.randomUUID().replaceAll('-', '').slice(0, 8).toUpperCase()}`;
+      `${course.certificatePrefix}-${new Date().getFullYear()}-${crypto.randomUUID().replaceAll('-', '').slice(0, 8).toUpperCase()}`;
     return issueCertificate(
       current,
       current.profileName,
@@ -449,7 +480,7 @@ export default function Home() {
     context.fillText(state.profileName.trim(), 600, resultEnd + 160);
     context.fillStyle = '#91a3c3';
     context.font = '400 25px Inter, sans-serif';
-    context.fillText('Basi di Intelligenza Artificiale', 600, resultEnd + 220);
+    context.fillText(course.title, 600, resultEnd + 220);
     context.textAlign = 'left';
     context.fillStyle = '#ffffff';
     context.font = '800 31px Inter, sans-serif';
@@ -478,7 +509,7 @@ export default function Home() {
         try {
           await navigator.share({
             title: `${item.name} · AI Academy`,
-            text: `Ho conquistato ${item.name} nel corso Basi di Intelligenza Artificiale.`,
+            text: `Ho conquistato ${item.name} nel corso ${course.title}.`,
             files: [file],
           });
           setShareStatus('Card condivisa.');
@@ -533,7 +564,7 @@ export default function Home() {
     context.font = '400 28px Inter, sans-serif';
     context.fillText('ha completato il corso', 900, 480);
     context.font = '700 42px Inter, sans-serif';
-    context.fillText('Basi di Intelligenza Artificiale', 900, 545);
+    context.fillText(course.title, 900, 545);
     context.font = '700 24px Inter, sans-serif';
     context.fillText('COMPETENZE ACQUISITE', 900, 630);
     context.font = '400 27px Inter, sans-serif';
@@ -564,7 +595,8 @@ export default function Home() {
     context.fillStyle = '#8c9199';
     context.font = '400 17px Inter, sans-serif';
     context.fillText(
-      'Attestato di partecipazione al percorso; non costituisce una qualifica professionale accreditata.',
+      course.certificateNotice ||
+        'Attestato di partecipazione al percorso; non costituisce una qualifica professionale accreditata.',
       900,
       1180,
     );
@@ -576,15 +608,20 @@ export default function Home() {
   const unlocked = unlock(state);
   const completion = completionPercent(state);
   const activityDone = completedActivityCount(state);
-  const nextMilestone = achievements.find((item) => !item.earned(state));
+
   return (
     <div className="academy-app" data-screen={screen}>
+      {screen === 'home' && (
+        <SkillUpHome state={state} ready={ready} onResume={resumeCourse} />
+      )}
       <AppHeader
+        course={course}
         xp={xp}
         streakDays={state.streakDays}
         onProfile={() => setShowProfile(true)}
       />
       <LessonHeader
+        course={course}
         module={l + 1}
         step={step}
         completed={
@@ -594,19 +631,8 @@ export default function Home() {
         }
       />
       <main className="course-shell">
-        <section className="home-intro mobile-only" aria-label="Benvenuto">
-          <p className="eyebrow">IL TUO PROSSIMO PASSO</p>
-          <h2>
-            Ciao
-            {state.profileName.trim()
-              ? `, ${state.profileName.trim().split(' ')[0]}`
-              : ''}
-            !
-          </h2>
-          <p>Pronto a continuare il tuo percorso?</p>
-          <ProgressSummary completion={completion} module={l + 1} />
-        </section>
         <CourseHeroCard
+          course={course}
           completion={completion}
           activityDone={activityDone}
           moduleNumber={l + 1}
@@ -614,23 +640,6 @@ export default function Home() {
           ready={ready}
           onContinue={resumeCourse}
         />
-        <section
-          className="home-next mobile-only"
-          aria-label="Il prossimo passo"
-        >
-          <JourneyCard title={finished ? 'Percorso completato' : level.title} />
-          <ObjectiveCard
-            title={
-              finished
-                ? 'Porta il tuo metodo nel lavoro'
-                : `Completa il Modulo ${unlocked + 1}`
-            }
-          >
-            {nextMilestone
-              ? `Prossimo badge: ${nextMilestone.name}`
-              : 'Tutti i badge conquistati.'}
-          </ObjectiveCard>
-        </section>
         <section
           className="progress-screen mobile-only"
           aria-label="Profilo formativo"
@@ -670,12 +679,13 @@ export default function Home() {
         <div className="section-heading">
           <div>
             <p className="eyebrow">PERCORSO FORMATIVO</p>
-            <h2>I moduli del corso</h2>
+            <h2>{course.title}</h2>
           </div>
           <p>Completa ogni modulo per sbloccare il successivo.</p>
+          {course.notice && <p className="course-notice">{course.notice}</p>}
         </div>
         <nav className="level-map" aria-label="Livelli del corso">
-          {levels.map((x, n) => (
+          {courseModules.map((x, n) => (
             <button
               key={x.title}
               className={`level-node ${n === l ? 'active' : ''} ${state.completed.includes(n) ? 'done' : ''}`}
@@ -704,7 +714,7 @@ export default function Home() {
                 </span>
               </span>
               <span className="node-label">{x.title}</span>
-              <span className="node-outcome">{levelOutcomes[n]}</span>
+              <span className="node-outcome">{x.description}</span>
               <span className="module-foot">
                 <span>
                   {courseModules[n].activities.length} attività · 5 fasi
@@ -822,10 +832,8 @@ export default function Home() {
           </aside>
         </div>
         <footer className="site-footer">
-          <span>AI Academy · Basi di AI</span>
-          <span>
-            60 minuti stimati, inclusa la pratica · Attestato di partecipazione
-          </span>
+          <span>AI Academy · {course.title}</span>
+          <span>{course.duration} · Attestato AI Academy</span>
         </footer>
       </main>
       <BottomNavigation screen={screen} />
@@ -885,7 +893,7 @@ export default function Home() {
                 <div>
                   <small>CONQUISTATO DA</small>
                   <strong>{state.profileName.trim() || 'Il tuo nome'}</strong>
-                  <span>Basi di Intelligenza Artificiale</span>
+                  <span>{course.title}</span>
                 </div>
               </div>
               <div className="collectible-copy">
@@ -927,20 +935,20 @@ export default function Home() {
           <DialogHeader>
             <DialogTitle>Il percorso è completo.</DialogTitle>
             <DialogDescription>
-              Hai trasformato sei moduli di teoria e pratica in un metodo che
-              puoi usare nel lavoro.
+              Hai trasformato {course.modules.length} moduli di teoria e pratica
+              in un metodo che puoi usare nel lavoro.
             </DialogDescription>
           </DialogHeader>
           <div className="finale-stage">
             <span className="finale-percent">100%</span>
             <img
-              src="./achievements/applied-intelligence.png"
-              alt="Trofeo Applied Intelligence"
+              src={course.achievements.at(-1)?.image || course.cover}
+              alt=""
               width={250}
               height={250}
             />
             <span className="rarity-label">Leggendario</span>
-            <h3>Applied Intelligence</h3>
+            <h3>Percorso completato</h3>
             <p>
               {activityDone} attività completate · {xp} XP conquistati
             </p>
@@ -987,7 +995,7 @@ export default function Home() {
               className="quiet"
               onClick={() => {
                 setShowFinale(false);
-                setSelectedAchievement(achievements[5]);
+                setSelectedAchievement(achievements.at(-1) || null);
               }}
             >
               Guarda il collectible
@@ -1015,7 +1023,7 @@ export default function Home() {
               <span>CERTIFICATO DI PARTECIPAZIONE</span>
             </div>
             <img
-              src="./achievements/applied-intelligence.png"
+              src={course.achievements.at(-1)?.image || course.cover}
               alt=""
               width={105}
               height={105}
@@ -1023,7 +1031,7 @@ export default function Home() {
             <small>SI ATTESTA CHE</small>
             <h3>{state.profileName}</h3>
             <p>ha completato il corso online</p>
-            <h4>Basi di Intelligenza Artificiale</h4>
+            <h4>{course.title}</h4>
             <p>
               {state.completed.length} moduli completati ·{' '}
               {Object.keys(state.competencyAwards).length} competenze acquisite

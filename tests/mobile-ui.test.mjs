@@ -37,7 +37,9 @@ async function view(screen) {
 }
 async function ready() {
   await page.waitForFunction(
-    () => !document.querySelector('.course-continue').disabled,
+    () =>
+      document.querySelector('.course-continue') &&
+      !document.querySelector('.course-continue').disabled,
   );
 }
 async function saved() {
@@ -99,7 +101,7 @@ try {
   await page.goto(url);
   await ready();
   assert.equal(Object.keys((await saved()).completedActivities).length, 0);
-  await page.locator('.course-continue').click();
+  await page.locator('.su-next .course-continue').click();
   await view('lesson');
   assert.ok(
     await page
@@ -107,9 +109,6 @@ try {
       .isDisabled(),
   );
   for (let i = 0; i < 3; i++) {
-    await page
-      .getByRole('button', { name: 'Ho letto e compreso', exact: true })
-      .click();
     await page.getByRole('button', { name: 'Continua', exact: true }).click();
   }
   assert.equal(score(await saved()), 15);
@@ -211,8 +210,13 @@ try {
         await page.evaluate(
           () =>
             document.querySelector('main').getBoundingClientRect().bottom <=
-            document.querySelector('.bottom-navigation').getBoundingClientRect()
-              .top +
+            document
+              .querySelector(
+                document.querySelector('.academy-app').dataset.screen === 'home'
+                  ? '.su-bottom'
+                  : '.bottom-navigation',
+              )
+              .getBoundingClientRect().top +
               1,
         ),
         `${width}/${screen}: final content covered`,
@@ -264,6 +268,8 @@ try {
   await ready();
   await page.setViewportSize({ width: 1440, height: 1000 });
   await view('home');
+  assert.equal(await page.locator('.su-course-card').count(), 6);
+  await view('lesson');
   assert.ok(await page.locator('.learning-experience').isVisible());
   await view('progress');
   assert.ok(await page.locator('.progress-profile').isVisible());

@@ -1,0 +1,33 @@
+{
+  "generator": "built-in ImageGen",
+  "assets": [
+    {
+      "file": "hero.webp",
+      "prompt": "Photorealistic editorial website banner, wide 3:1. Bright modern office, adult man in navy shirt seated at laptop seen from behind in rightmost third, window city view soft daylight. Left two thirds almost empty pale lavender-white office background, suitable for dark text overlay. Calm premium professional mood. No text, no watermark. Match polished online learning dashboard."
+    },
+    {
+      "file": "ai.webp",
+      "prompt": "Wide landscape 3:2 premium course thumbnail. Realistic futuristic humanoid robot head side profile facing right, intricate dark metallic surfaces with electric cyan glowing circuits, deep midnight blue background, cinematic crisp technology photography. No text or logo."
+    },
+    {
+      "file": "marketing.webp",
+      "prompt": "Wide landscape 3:2 premium course thumbnail, elegant 3D blue megaphone pointing upper right with floating colorful social communication symbols: hearts, chat bubbles, play buttons, blue people icons. Soft pastel lavender pink studio background, polished professional advertising composition. No text or wordmarks."
+    },
+    {
+      "file": "webdesign.webp",
+      "prompt": "Wide landscape 3:2 editorial photo of slim laptop displaying a tasteful website builder interface with grid and landscape photography, on bright white desk beside small green potted plant. Angled view, soft daylight, premium modern web design course thumbnail. No readable text, no logos."
+    },
+    {
+      "file": "analytics.webp",
+      "prompt": "Wide landscape 3:2 premium course thumbnail of computer screen displaying dark navy analytics dashboard with bright cyan bar charts and amber growth curves. Crisp realistic data visualization, cinematic dark office, no readable text or logos."
+    },
+    {
+      "file": "security.webp",
+      "prompt": "Wide landscape 3:2 premium course thumbnail, polished luminous electric blue padlock on dark navy technology background with delicate circuit paths and soft glowing particles. Cinematic photorealistic 3D, professional not cartoon. No text or logo."
+    },
+    {
+      "file": "automation.webp",
+      "prompt": "Wide landscape 3:2 premium course thumbnail, white industrial robotic arm reaching across bright minimal modern laboratory, close cropped mechanical articulation, cool gray-blue palette, daylight photographic realism. No text or logo."
+    }
+  ]
+}

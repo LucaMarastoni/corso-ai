@@ -1,15 +1,16 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import './mobile.css';
+import './skillup.css';
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
 };
 export const metadata: Metadata = {
-  title: 'AI Academy · Basi di Intelligenza Artificiale',
+  title: 'SkillUp · Competenze oggi. Opportunità domani.',
   description:
-    'Un percorso professionale in sei moduli per comprendere l’AI, scrivere prompt efficaci e verificare ogni risposta.',
+    'Scopri corsi sul mondo digitale, sviluppa competenze concrete e continua il tuo percorso di apprendimento.',
 };
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (

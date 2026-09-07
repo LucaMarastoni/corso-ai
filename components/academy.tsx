@@ -1,9 +1,7 @@
+import { getCourse, courseActivityCount } from '../app/courses';
+import type { Course } from '../app/course-types';
 import { CompetencyList } from './learning';
-import {
-  courseModules,
-  PHASES,
-  COURSE_ACTIVITY_COUNT,
-} from '../app/learning-model';
+import { PHASES } from '../app/learning-model';
 import { learningLevel } from '../app/learning-config';
 import Image from 'next/image';
 import type { ComponentProps, ReactNode, CSSProperties } from 'react';
@@ -221,9 +219,11 @@ export function BadgeTile({
   );
 }
 export function CertificateCard({
+  moduleCount = 6,
   available,
   onOpen,
 }: {
+  moduleCount?: number;
   available: boolean;
   onOpen: () => void;
 }) {
@@ -237,7 +237,7 @@ export function CertificateCard({
           <small>
             {available
               ? 'Il tuo attestato è disponibile.'
-              : 'Completa tutti i 6 moduli.'}
+              : `Completa tutti i ${moduleCount} moduli.`}
           </small>
         </span>
       </div>
@@ -251,15 +251,17 @@ export function CertificateCard({
   );
 }
 export function LessonHeader({
+  course,
   module,
   step,
   completed,
 }: {
+  course: Course;
   module: number;
   step: number;
   completed: number;
 }) {
-  const current = courseModules[module - 1];
+  const current = course.modules[module - 1];
   const activity = current.activities[step];
   const phase = current.phases.find((item) => item.id === activity.phase)!;
   const percent = Math.round((completed / current.activities.length) * 100);
@@ -333,6 +335,7 @@ export function ProfileContent({
   onDownload: () => void;
   onCertificate: () => void;
 }) {
+  const course = getCourse(state.courseId);
   return (
     <div className="profile-content">
       <AcademyCard>
@@ -363,6 +366,7 @@ export function ProfileContent({
       </AcademyCard>
       <CompetencyList state={state} />
       <CertificateCard
+        moduleCount={course.modules.length}
         available={!!state.certificateId}
         onOpen={onCertificate}
       />
@@ -371,14 +375,12 @@ export function ProfileContent({
         Scarica il tuo quaderno
         <ArrowRight size={18} />
       </AcademyButton>
-      <a
-        className="academy-material-link"
-        href="./materiali/dispensa.md"
-        download
-      >
-        <BookOpen size={18} />
-        Scarica la dispensa
-      </a>
+      {course.materials && (
+        <a className="academy-material-link" href={course.materials} download>
+          <BookOpen size={18} />
+          Scarica la dispensa
+        </a>
+      )}
       <p className="local-profile-note">
         {storage
           ? 'Profilo e progressi restano in questo browser. Non si sincronizzano tra dispositivi.'
@@ -389,10 +391,12 @@ export function ProfileContent({
 }
 
 export function AppHeader({
+  course,
   xp,
   streakDays,
   onProfile,
 }: {
+  course: Course;
   xp: number;
   streakDays: number;
   onProfile: () => void;
@@ -444,15 +448,18 @@ export function AppHeader({
         <UserRound size={18} />
         <span>Profilo</span>
       </a>
-      <a className="download-link" href="./materiali/dispensa.md" download>
-        <BookOpen size={18} />
-        <span>Dispensa</span>
-      </a>
+      {course.materials && (
+        <a className="download-link" href={course.materials} download>
+          <BookOpen size={18} />
+          <span>Dispensa</span>
+        </a>
+      )}
     </header>
   );
 }
 
 export function CourseHeroCard({
+  course,
   completion,
   activityDone,
   moduleNumber,
@@ -460,6 +467,7 @@ export function CourseHeroCard({
   ready,
   onContinue,
 }: {
+  course: Course;
   completion: number;
   activityDone: number;
   moduleNumber: number;
@@ -472,21 +480,20 @@ export function CourseHeroCard({
       <div className="course-card-main">
         <div className="course-index">01</div>
         <div>
-          <p className="eyebrow">CORSO PROFESSIONALE · LIVELLO BASE</p>
-          <h1 id="course-title">Basi di Intelligenza Artificiale</h1>
-          <p className="course-promise">
-            Comprendi l’AI, scrivi prompt efficaci e verifica le risposte nel
-            lavoro.
+          <p className="eyebrow">
+            {course.category} · LIVELLO {course.level}
           </p>
+          <h1 id="course-title">{course.title}</h1>
+          <p className="course-promise">{course.description}</p>
           <div className="course-meta">
             <span>
-              <Clock3 size={16} /> 60 minuti
+              <Clock3 size={16} /> {course.duration}
             </span>
             <span>
-              <Layers3 size={16} /> 6 moduli
+              <Layers3 size={16} /> {course.modules.length} moduli
             </span>
             <span>
-              <Award size={16} /> Livello base
+              <Award size={16} /> Livello {course.level}
             </span>
           </div>
           <AcademyButton
@@ -512,7 +519,7 @@ export function CourseHeroCard({
         <div className="progress-copy">
           <span>AVANZAMENTO DEL CORSO</span>
           <strong>
-            {activityDone} di {COURSE_ACTIVITY_COUNT} attività
+            {activityDone} di {courseActivityCount(course.id)} attività
           </strong>
           <Progress value={completion} aria-label="Completamento del corso" />
           <small>

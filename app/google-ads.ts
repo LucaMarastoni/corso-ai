@@ -1,3 +1,4 @@
+import { presentLessonSlide } from './lesson-content.ts';
 import { PHASES, type Activity } from './learning-model.ts';
 import { XP_REWARDS } from './learning-config.ts';
 import type { Course, CourseModule, ExamQuestion } from './course-types.ts';
@@ -570,7 +571,7 @@ const makeModule = (n: number): CourseModule => {
         phase: 'learn',
         title: slide.title,
         description: slide.takeaway,
-        slide,
+        slide: presentLessonSlide(slide, 'google-ads', n, i),
         completionRule: { kind: 'acknowledge' },
         xpReward: XP_REWARDS.microLesson,
       }),

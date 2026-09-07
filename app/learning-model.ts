@@ -1,5 +1,5 @@
 import { levels } from './journey.ts';
-import type { LessonSlide } from './lesson-content.ts';
+import { presentLessonSlide, type LessonSlide } from './lesson-content.ts';
 import { XP_REWARDS } from './learning-config.ts';
 export type PhaseId = 'learn' | 'practice' | 'verify' | 'apply' | 'unlock';
 export const PHASES: { id: PhaseId; name: string; purpose: string }[] = [
@@ -156,7 +156,7 @@ export const courseModules = levels.map((level, index) => {
         description: slide.takeaway,
         completionRule: { kind: 'acknowledge' },
         xpReward: XP_REWARDS.microLesson,
-        slide,
+        slide: presentLessonSlide(slide, 'ai-basics', index, i),
       }),
     ),
     {

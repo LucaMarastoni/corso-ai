@@ -22,6 +22,7 @@ import {
   Sparkles,
   Target,
 } from 'lucide-react';
+import { createStepFlow, quizFlowDelay } from '../app/lesson-flow';
 import { AcademyButton } from './academy';
 import { ActivityText, ModuleCompletion } from './learning';
 import { StructuredInteraction } from './exam';
@@ -30,6 +31,7 @@ import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { getCourse } from '../app/courses';
 import type { LessonSlide } from '../app/lesson-content';
 import {
+  score,
   activityAvailable,
   canCompleteActivity,
   completeActivity,
@@ -53,11 +55,13 @@ function LessonHeader({
   title,
   current,
   total,
+  progressValue,
 }: {
   moduleNumber: number;
   title: string;
   current: number;
   total: number;
+  progressValue?: number;
 }) {
   return (
     <header className="lp-header">
@@ -74,8 +78,12 @@ function LessonHeader({
         </span>
       </div>
       <Progress
-        value={(100 * current) / total}
-        aria-label={`Avanzamento: ${current} di ${total}`}
+        value={progressValue ?? (100 * current) / total}
+        aria-label={
+          progressValue === undefined
+            ? `Avanzamento: ${current} di ${total}`
+            : `Modulo completato al ${Math.round(progressValue)}%`
+        }
       />
     </header>
   );
@@ -132,6 +140,10 @@ function LessonFrame({
   focusKey,
   type,
   onSwipe,
+  progressValue,
+  direction = 'next',
+  pulse,
+  onInteraction,
 }: {
   moduleNumber: number;
   title: string;
@@ -142,6 +154,10 @@ function LessonFrame({
   focusKey: string;
   type: string;
   onSwipe?: (direction: 'next' | 'back') => void;
+  progressValue?: number;
+  direction?: 'next' | 'back';
+  pulse?: ReactNode;
+  onInteraction?: () => void;
 }) {
   const body = useRef<HTMLDivElement>(null);
   const touch = useRef<{ x: number; y: number; at: number } | null>(null);
@@ -154,16 +170,23 @@ function LessonFrame({
     }
   }, [focusKey]);
   return (
-    <article className="lesson-player" data-activity-type={type}>
+    <article
+      className="lesson-player"
+      data-activity-type={type}
+      data-direction={direction}
+    >
       <LessonHeader
         moduleNumber={moduleNumber}
         title={title}
         current={current}
         total={total}
+        progressValue={progressValue}
       />
       <div
         className="lp-body"
         ref={body}
+        onPointerDown={onInteraction}
+        onKeyDown={onInteraction}
         onTouchStart={(event) => {
           if (
             !onSwipe ||
@@ -206,6 +229,7 @@ function LessonFrame({
           {children}
         </div>
       </div>
+      {pulse}
       {navigation}
     </article>
   );
@@ -321,6 +345,36 @@ function ComparisonSlide({ slide }: { slide: LessonSlide }) {
     </>
   );
 }
+function HighlightText({
+  text,
+  keywords = [],
+}: {
+  text: string;
+  keywords?: string[];
+}) {
+  if (!keywords.length) return <>{text}</>;
+  const parts = text.split(
+    new RegExp(
+      '(' +
+        keywords
+          .map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+          .join('|') +
+        ')',
+      'gi',
+    ),
+  );
+  return (
+    <>
+      {parts.map((part, i) =>
+        keywords.some((word) => word.toLowerCase() === part.toLowerCase()) ? (
+          <strong key={i}>{part}</strong>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
 export function SlideRenderer({
   slide,
   category,
@@ -328,29 +382,88 @@ export function SlideRenderer({
   slide: LessonSlide;
   category: string;
 }) {
+  const layout = slide.layout || 'editorial';
+  const paragraphs = (texts: string[]) =>
+    texts.map((text) => (
+      <p key={text}>
+        <HighlightText text={text} keywords={slide.keywords} />
+      </p>
+    ));
   return (
-    <section className={`lp-slide lp-slide-${slide.layout || 'editorial'}`}>
+    <section className={`lp-slide lp-slide-${layout}`}>
       <p className="lp-eyebrow">{slide.eyebrow || category}</p>
       <h1 tabIndex={-1}>{slide.title}</h1>
-      <p className="lp-explanation">{slide.steps[0]}</p>
-      {slide.layout === 'comparison' ? (
-        <ComparisonSlide slide={slide} />
-      ) : slide.nodes ? (
-        <FlowVisual slide={slide} />
+      {layout === 'article' ? (
+        <div className="lp-article">{paragraphs(slide.steps)}</div>
+      ) : layout === 'sequence' ? (
+        <ol className="lp-sequence">
+          {slide.sequence?.map((step, i) => (
+            <li key={step.title}>
+              <span>{i + 1}</span>
+              <div>
+                <h3>{step.title}</h3>
+                <p>{step.text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
       ) : (
-        <div className="lp-editorial-visual">
-          <span>
-            <Lightbulb size={44} strokeWidth={1.3} />
-          </span>
-          <div>
-            {slide.steps.slice(1).map((text) => (
-              <p key={text}>{text}</p>
-            ))}
-          </div>
-        </div>
+        <>
+          <p className="lp-explanation">{slide.steps[0]}</p>
+          {layout === 'comparison' ? (
+            <ComparisonSlide slide={slide} />
+          ) : slide.nodes ? (
+            <FlowVisual slide={slide} />
+          ) : layout === 'diagram' ? (
+            <>
+              <div className="lp-diagram">
+                {slide.principles?.map((item, i) => (
+                  <div key={item.title}>
+                    <span>{i + 1}</span>
+                    <h3>{item.title}</h3>
+                    <p>{item.text}</p>
+                    {i < (slide.principles?.length || 0) - 1 && (
+                      <ArrowRight aria-hidden="true" />
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="lp-article">
+                {paragraphs(slide.steps.slice(1))}
+              </div>
+            </>
+          ) : layout === 'example' ? (
+            <div className="lp-example">
+              <p className="lp-eyebrow">
+                {slide.exampleLabel || 'ESEMPIO PRATICO'}
+              </p>
+              {paragraphs(slide.steps.slice(1))}
+            </div>
+          ) : (
+            <div
+              className={
+                layout === 'insight' ? 'lp-insight' : 'lp-editorial-visual'
+              }
+            >
+              <span>
+                <Lightbulb size={44} strokeWidth={1.3} />
+              </span>
+              <div>{paragraphs(slide.steps.slice(1))}</div>
+            </div>
+          )}
+        </>
       )}
       {slide.caption && <p className="lp-caption">{slide.caption}</p>}
       <TakeawayCard label={slide.calloutLabel}>{slide.takeaway}</TakeawayCard>
+      {slide.source && (
+        <aside className="lp-source">
+          <span>Fonte · {slide.source.publisher}</span>
+          <p>{slide.source.title}</p>
+          <a href={slide.source.url} target="_blank" rel="noopener noreferrer">
+            Apri la fonte ↗
+          </a>
+        </aside>
+      )}
     </section>
   );
 }
@@ -360,9 +473,11 @@ export function MultipleChoiceActivity({
   value,
   onValue,
   disabled = false,
+  feedback,
 }: {
   title: string;
   options: string[];
+  feedback?: boolean;
   value?: number;
   onValue: (index: number) => void;
   disabled?: boolean;
@@ -378,10 +493,16 @@ export function MultipleChoiceActivity({
       {options.map((option, index) => (
         <label
           key={option}
-          className={`lp-option ${value === index ? 'selected' : ''}`}
+          className={`lp-option ${value === index ? 'selected' : ''} ${value === index && feedback !== undefined ? (feedback ? 'is-correct' : 'is-wrong') : ''}`}
         >
           <span className="lp-option-letter">
-            {String.fromCharCode(65 + index)}
+            {value === index && feedback === true ? (
+              <Check size={20} />
+            ) : value === index && feedback === false ? (
+              '×'
+            ) : (
+              String.fromCharCode(65 + index)
+            )}
           </span>
           <span>{option}</span>
           <RadioGroupItem value={String(index)} />
@@ -408,7 +529,7 @@ function QuizFeedback({
             <Check size={20} /> Ottimo
           </>
         ) : (
-          'Riprova'
+          'Quasi'
         )}
       </strong>
       <p>{children}</p>
@@ -623,45 +744,143 @@ export function LessonPlayer({
     id: string;
     signature: string;
     correct: boolean;
+    xp: number;
+    attempts: number;
+    token: number;
   } | null>(null);
   const feedback =
     checked?.id === activity.id && checked.signature === signature
       ? checked
       : done && valid
-        ? { correct: true }
+        ? { correct: true, xp: 0, attempts: 0, token: 0 }
         : null;
+  const attempts = useRef<Record<string, number>>({});
+  const [direction, setDirection] = useState<'next' | 'back'>('next');
+  const [pulse, setPulse] = useState<{
+    id: string;
+    xp: number;
+    label: string;
+  } | null>(null);
+  const [pending, setPending] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const flow = useRef(
+    createStepFlow({
+      schedule: (run, delay) => setTimeout(run, delay),
+      clear: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
+    }),
+  );
+  const cancelFlow = () => {
+    flow.current.cancel();
+    setPending(false);
+  };
+  useEffect(() => {
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const cancel = () => {
+      flow.current.cancel();
+      setPending(false);
+    };
+    const update = () => {
+      setReducedMotion(motion.matches);
+      cancel();
+    };
+    update();
+    motion.addEventListener('change', update);
+    window.addEventListener('hashchange', cancel);
+    window.addEventListener('blur', cancel);
+    document.addEventListener('visibilitychange', cancel);
+    return () => {
+      flow.current.cancel();
+      motion.removeEventListener('change', update);
+      window.removeEventListener('hashchange', cancel);
+      window.removeEventListener('blur', cancel);
+      document.removeEventListener('visibilitychange', cancel);
+    };
+  }, []);
+  useEffect(() => {
+    flow.current.cancel();
+    setPending(false);
+    setPulse(null);
+    return () => flow.current.cancel();
+  }, [activity.id, state.courseId]);
+  const scheduleAdvance = (delay: number) => {
+    setPending(true);
+    flow.current.schedule(activity.id, delay, () => {
+      setPending(false);
+      setDirection('next');
+      onChange((value) => advanceLesson(value, state.level, activity.id));
+    });
+  };
   const isQuiz = !!activity.question || !!activity.interaction;
   const back = () => {
+    cancelFlow();
+    setDirection('back');
     const previous = ordered[position - 1];
     if (previous && activityAvailable(state, state.level, previous))
       onNavigate(state.level, module.activities.indexOf(previous));
     else window.location.hash = 'lessons';
   };
   const advance = () => {
+    cancelFlow();
+    setDirection('next');
     if (ready && available)
       onChange((current) => advanceLesson(current, state.level, activity.id));
   };
   const submit = () => {
     if (!ready || !available) return;
-    setChecked({ id: activity.id, signature, correct: valid });
-    if (valid)
-      onChange((current) =>
-        completeActivity(current, state.level, activity.id),
+    cancelFlow();
+    if (!valid)
+      attempts.current[activity.id] = (attempts.current[activity.id] || 0) + 1;
+    const completed = valid
+      ? completeActivity(state, state.level, activity.id)
+      : state;
+    setChecked({
+      id: activity.id,
+      signature,
+      correct: valid,
+      xp: score(completed) - score(state),
+      attempts: attempts.current[activity.id] || 0,
+      token: Date.now(),
+    });
+    if (valid) {
+      onChange((value) => completeActivity(value, state.level, activity.id));
+      const explanation =
+        activity.question?.why || activity.interaction?.explanation || '';
+      const delay = quizFlowDelay(
+        explanation,
+        reducedMotion,
+        (attempts.current[activity.id] || 0) >= 2,
       );
+      if (delay !== null && !done) scheduleAdvance(delay);
+    }
   };
   const next = () => {
+    if (!ready || !available) return;
+    if (flow.current.finish(activity.id)) return;
     if (isQuiz) return feedback?.correct ? advance() : submit();
     if (activity.type === 'unlock') {
       if (!done) {
-        onChange((current) =>
-          completeActivity(current, state.level, activity.id),
-        );
+        onChange((value) => completeActivity(value, state.level, activity.id));
         return;
       }
       if (state.level < course.modules.length - 1)
         onNavigate(state.level + 1, 0);
       else onCertificate();
-    } else advance();
+    } else if (done) advance();
+    else if (valid) {
+      const completed = completeActivity(state, state.level, activity.id);
+      onChange((value) => completeActivity(value, state.level, activity.id));
+      setPulse({
+        id: activity.id,
+        xp: score(completed) - score(state),
+        label:
+          kind === 'slide'
+            ? current === total
+              ? 'Lezione completata'
+              : 'Letto'
+            : 'Attività completata',
+      });
+      scheduleAdvance(reducedMotion ? 200 : kind === 'slide' ? 400 : 650);
+    }
   };
   const answered = activity.question
     ? state.answers[activity.id] !== undefined
@@ -712,10 +931,27 @@ export function LessonPlayer({
       total={total}
       focusKey={activity.id}
       type={kind}
+      direction={direction}
+      progressValue={
+        (100 *
+          module.activities.filter((item) => isActivityComplete(state, item.id))
+            .length) /
+        module.activities.length
+      }
+      onInteraction={cancelFlow}
+      pulse={
+        pulse?.id === activity.id ? (
+          <div className="lp-micro-reward" role="status">
+            <Check size={18} />
+            <span>{pulse.label}</span>
+            {pulse.xp > 0 && <strong>+{pulse.xp} XP</strong>}
+          </div>
+        ) : undefined
+      }
       onSwipe={
         kind === 'slide'
           ? (direction) => {
-              if (direction === 'next') advance();
+              if (direction === 'next') next();
               else if (position > 0) back();
             }
           : undefined
@@ -770,10 +1006,12 @@ export function LessonPlayer({
           )}
           {activity.question && (
             <MultipleChoiceActivity
+              feedback={feedback?.correct}
               title={activity.question.goal}
               options={activity.question.options}
               value={state.answers[activity.id]}
               onValue={(value) => {
+                cancelFlow();
                 setChecked(null);
                 onChange((current) => ({
                   ...current,
@@ -786,12 +1024,16 @@ export function LessonPlayer({
             <StructuredInteraction
               activity={activity}
               state={state}
-              onChange={onChange}
+              onChange={(value) => {
+                cancelFlow();
+                setChecked(null);
+                onChange(value);
+              }}
               showFeedback={false}
             />
           )}
           {isQuiz && feedback && (
-            <QuizFeedback correct={feedback.correct}>
+            <QuizFeedback key={feedback.token} correct={feedback.correct}>
               {activity.question
                 ? feedback.correct
                   ? activity.question.why
@@ -799,6 +1041,36 @@ export function LessonPlayer({
                 : feedback.correct
                   ? activity.interaction?.explanation
                   : activity.interaction?.hint}
+              {feedback.correct && feedback.xp > 0 && (
+                <span className="lp-xp">+{feedback.xp} XP</span>
+              )}
+              {!feedback.correct && feedback.attempts >= 2 && (
+                <span className="lp-solution">
+                  <strong>La soluzione</strong>
+                  {activity.question
+                    ? activity.question.options[activity.question.correct]
+                    : activity.interaction?.correct
+                        .map(
+                          (id) =>
+                            [
+                              ...(activity.interaction?.options || []),
+                              ...(activity.interaction?.items || []),
+                            ].find((item) => item.id === id)?.label || id,
+                        )
+                        .join(' → ')}
+                  <br />
+                  {activity.question?.why || activity.interaction?.explanation}
+                </span>
+              )}
+              {pending && feedback.correct && (
+                <button
+                  type="button"
+                  className="lp-read-feedback"
+                  onClick={cancelFlow}
+                >
+                  Leggi con calma
+                </button>
+              )}
             </QuizFeedback>
           )}
           {(kind === 'textInput' || kind === 'checklist') && (

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import './mobile.css';
 import './skillup.css';
+import './profile.css';
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,

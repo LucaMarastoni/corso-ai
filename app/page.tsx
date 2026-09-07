@@ -17,6 +17,7 @@ import {
 import { getCourse, DEFAULT_COURSE_ID } from './courses';
 import type { Course } from './course-types';
 import { SkillUpHome } from '../components/skillup-home';
+import { SkillUpProfile } from '../components/skillup-profile';
 import { learningLevel } from './learning-config';
 import {
   Dialog,
@@ -614,11 +615,21 @@ function CourseApp({ course }: { course: Course }) {
       {screen === 'home' && (
         <SkillUpHome state={state} ready={ready} onResume={resumeCourse} />
       )}
+      {screen === 'profile' && (
+        <SkillUpProfile
+          state={state}
+          onName={setProfileName}
+          onDownload={download}
+          onCertificate={() => setShowCertificate(true)}
+        />
+      )}
       <AppHeader
         course={course}
         xp={xp}
         streakDays={state.streakDays}
-        onProfile={() => setShowProfile(true)}
+        onProfile={() => {
+          window.location.hash = 'profile';
+        }}
       />
       <LessonHeader
         course={course}
@@ -654,26 +665,6 @@ function CourseApp({ course }: { course: Course }) {
                 : setShowFinale(true)
             }
             onDownloadCertificate={downloadCertificate}
-          />
-        </section>
-        <section
-          className="profile-screen mobile-only"
-          aria-labelledby="profile-title"
-        >
-          <p className="eyebrow">IL TUO SPAZIO</p>
-          <h1 id="profile-title">Profilo</h1>
-          <ProfileContent
-            state={state}
-            xp={xp}
-            level={learningLevel(xp).current.level}
-            achievements={achievements}
-            storage={storage}
-            onName={setProfileName}
-            onDownload={download}
-            onCertificate={() => {
-              setShowProfile(false);
-              setShowCertificate(true);
-            }}
           />
         </section>
         <div className="section-heading">

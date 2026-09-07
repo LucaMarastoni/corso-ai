@@ -10,7 +10,6 @@ import {
 } from '../components/academy';
 import {
   LearningExperience,
-  ProgressProfile,
   LevelCard,
   NextMilestone,
 } from '../components/learning';
@@ -18,6 +17,8 @@ import { getCourse, DEFAULT_COURSE_ID } from './courses';
 import type { Course } from './course-types';
 import { SkillUpHome } from '../components/skillup-home';
 import { SkillUpProfile } from '../components/skillup-profile';
+import { SkillUpProgress } from '../components/skillup-progress';
+import { progressActivity } from './progress-dashboard';
 import { learningLevel } from './learning-config';
 import {
   Dialog,
@@ -215,11 +216,21 @@ function CourseApp({ course }: { course: Course }) {
             : null;
         }
       }
+      const restored = source
+        ? restore(source, course.id)
+        : { ...initialState, courseId: course.id };
+      const url = new URL(window.location.href);
+      const activityId = url.searchParams.get('activity');
+      const target = activityId ? progressActivity(restored, activityId) : null;
       setState(
-        source
-          ? restore(source, course.id)
-          : { ...initialState, courseId: course.id },
+        target
+          ? { ...restored, level: target.moduleIndex, step: target.step }
+          : restored,
       );
+      if (activityId) {
+        url.searchParams.delete('activity');
+        window.history.replaceState(null, '', url);
+      }
     } catch {
       setStorage(false);
     }
@@ -333,6 +344,21 @@ function CourseApp({ course }: { course: Course }) {
       nextModule,
       nextStep < 0 ? courseModules[nextModule].activities.length - 1 : nextStep,
     );
+  }
+  function openProgressActivity(courseId: string, activityId: string) {
+    if (!ready) return;
+    if (courseId === course.id) {
+      const target = progressActivity(state, activityId);
+      if (!target) return;
+      navigate(target.moduleIndex, target.step);
+      window.location.hash = 'lesson';
+    } else {
+      const url = new URL(window.location.href);
+      url.searchParams.set('course', courseId);
+      url.searchParams.set('activity', activityId);
+      url.hash = 'lesson';
+      window.location.assign(url.href);
+    }
   }
   function listen() {
     if (!slide || !supported) return;
@@ -623,6 +649,13 @@ function CourseApp({ course }: { course: Course }) {
           onCertificate={() => setShowCertificate(true)}
         />
       )}
+      {screen === 'progress' && (
+        <SkillUpProgress
+          state={state}
+          ready={ready}
+          onActivity={openProgressActivity}
+        />
+      )}
       <AppHeader
         course={course}
         xp={xp}
@@ -651,22 +684,6 @@ function CourseApp({ course }: { course: Course }) {
           ready={ready}
           onContinue={resumeCourse}
         />
-        <section
-          className="progress-screen mobile-only"
-          aria-label="Profilo formativo"
-        >
-          <ProgressProfile
-            state={state}
-            onContinue={resumeCourse}
-            onAchievement={setSelectedAchievement}
-            onCertificate={() =>
-              state.certificateId
-                ? setShowCertificate(true)
-                : setShowFinale(true)
-            }
-            onDownloadCertificate={downloadCertificate}
-          />
-        </section>
         <div className="section-heading">
           <div>
             <p className="eyebrow">PERCORSO FORMATIVO</p>
@@ -827,7 +844,10 @@ function CourseApp({ course }: { course: Course }) {
           <span>{course.duration} · Attestato AI Academy</span>
         </footer>
       </main>
-      <BottomNavigation screen={screen} />
+      <BottomNavigation
+        screen={screen}
+        courseLabel={screen === 'progress' ? 'Corsi' : undefined}
+      />
       <Dialog open={showProfile} onOpenChange={setShowProfile}>
         <DialogContent className="profile-dialog">
           <DialogHeader>

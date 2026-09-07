@@ -1,0 +1,1170 @@
+.academy-app[data-screen='progress']
+  > :is(.topbar, .mobile-lesson-header, .course-shell) {
+  display: none !important;
+}
+.skillup-progress {
+  --primary: #076bff;
+  --primary-hover: #005bdd;
+  --foreground: #10163d;
+  --ink-soft: #52638e;
+  --line: #e8eef7;
+  --muted: #e6edf7;
+  --radius-md: 18px;
+  background: #f7f9fc;
+  color: var(--foreground);
+  min-height: 100vh;
+  padding: 0 16px calc(110px + env(safe-area-inset-bottom));
+  font-size: 16px;
+  line-height: 1.4;
+  font-family: Inter, Arial, sans-serif;
+}
+.skillup-progress :is(h1, h2, h3, p) {
+  margin: 0;
+}
+.skillup-progress :is(button, a):focus-visible {
+  outline: 3px solid #82adff;
+  outline-offset: 3px;
+}
+.skillup-progress button {
+  cursor: pointer;
+}
+.sg-header {
+  height: 76px;
+  max-width: 1000px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+}
+.sg-header h1 {
+  text-align: center;
+  font-size: 25px;
+  font-weight: 750;
+  letter-spacing: -0.65px;
+}
+.sg-header button {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  color: #10163d;
+  border-radius: 10px;
+}
+.sg-header button:hover {
+  background: #eaf2ff;
+}
+.sg-layout {
+  max-width: 1000px;
+  margin: auto;
+  display: grid;
+  gap: 14px;
+}
+.skillup-progress .academy-card {
+  display: block;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 2px 10px #2a4b6a03;
+  padding: 20px;
+  overflow: visible;
+  color: var(--foreground);
+  font-size: 16px;
+  gap: 0;
+  --tw-ring-shadow: 0 0 #0000;
+}
+.skillup-progress h2 {
+  font-size: 21px;
+  font-weight: 750;
+  letter-spacing: -0.45px;
+  line-height: 1.25;
+}
+.skillup-progress h3 {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.skillup-progress p {
+  color: var(--ink-soft);
+}
+.skillup-progress .academy-button {
+  min-height: 44px;
+  height: auto;
+  border-radius: 10px;
+  padding: 10px 15px;
+  font-size: 15px;
+  font-weight: 600;
+  background: #076bff;
+  color: white;
+  box-shadow: none;
+}
+.skillup-progress .academy-button:hover {
+  background: #005bdd;
+}
+.skillup-progress .academy-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+.skillup-progress [data-slot='progress'] {
+  gap: 0;
+  min-width: 0;
+}
+.skillup-progress [data-slot='progress-track'] {
+  height: 10px;
+  background: #e5ecf6;
+  border-radius: 20px;
+}
+.skillup-progress [data-slot='progress-indicator'] {
+  background: #397fff;
+  border-radius: 20px;
+}
+.sg-intro {
+  font-size: 16px;
+  margin-top: 3px !important;
+}
+.sg-overview-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1.12fr 1fr;
+  align-items: center;
+  gap: 20px;
+  margin-top: 12px;
+}
+.sg-ring {
+  width: 175px;
+  max-width: 100%;
+  aspect-ratio: 1;
+  position: relative;
+}
+.sg-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  fill: none;
+  stroke-width: 9;
+}
+.sg-ring-track {
+  stroke: #e7eef8;
+}
+.sg-ring-value {
+  stroke: #2f7eff;
+  stroke-linecap: round;
+}
+.sg-ring > div {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 4px;
+}
+.sg-ring strong {
+  font-size: 34px;
+  line-height: 1.1;
+  letter-spacing: -1px;
+}
+.sg-ring span {
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.25;
+}
+.sg-overview-metric {
+  border-left: 1px solid #e5edf8;
+  padding-left: 24px;
+  min-height: 115px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 7px;
+}
+.sg-mini-icon {
+  width: 37px;
+  height: 37px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #076bff;
+  background: #edf4ff;
+}
+.sg-mini-icon.positive {
+  color: #06ae67;
+  background: #e8fbf3;
+}
+.sg-overview-metric > strong {
+  font-size: 30px;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+.sg-overview-metric > span:last-child {
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+.sg-overview-metric small {
+  display: block;
+  font-size: 12px;
+  color: #7a87a3;
+  margin-top: 2px;
+}
+.skillup-progress .sg-level {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: linear-gradient(115deg, #e4edff, #ede9ff);
+  border-color: #e2e9fc;
+  padding: 20px 26px;
+}
+.sg-level > img {
+  width: 130px;
+  height: 130px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.sg-level-content {
+  min-width: 0;
+  flex: 1;
+}
+.sg-level-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sg-level h2 {
+  font-size: 30px;
+  letter-spacing: -0.8px;
+}
+.sg-level h3 {
+  font-size: 19px;
+  color: #455684;
+  margin-top: 1px;
+}
+.sg-next-level {
+  font-size: 12px;
+  color: #075df1;
+  background: #ffffff9e;
+  border-radius: 10px;
+  padding: 6px 10px;
+  max-width: 210px;
+}
+.sg-level-content > p {
+  margin-top: 8px;
+  font-size: 16px;
+}
+.sg-level-content > p strong {
+  color: #121b43;
+}
+.sg-level [data-slot='progress'] {
+  margin-top: 7px;
+}
+.sg-level [data-slot='progress-track'] {
+  background: #cbd4ec;
+  height: 12px;
+}
+.sg-level .sg-level-remaining {
+  margin-top: 6px;
+  font-size: 14px;
+}
+.skillup-progress .sg-streak {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 16px 22px;
+}
+.sg-streak-copy {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.sg-flame {
+  color: #f29c30;
+  background: #fff6e9;
+  border-radius: 50%;
+  width: 65px;
+  height: 65px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.sg-streak h2 {
+  font-size: 20px;
+}
+.sg-streak-copy p {
+  font-size: 14px;
+  margin-top: 3px;
+}
+.sg-streak-week {
+  border-left: 1px solid #e7edf7;
+  padding-left: 22px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 18px;
+}
+.sg-streak-week > div {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.sg-streak-week i {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #e2eaf6;
+  display: grid;
+  place-items: center;
+}
+.sg-streak-week i.done {
+  background: #076bff;
+  color: white;
+}
+.sg-streak-week .today > span {
+  color: #076bff;
+  font-weight: 700;
+}
+.skillup-progress :is(.academy-section-heading, .sg-section-heading) {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.skillup-progress :is(.academy-section-heading a, .sg-section-heading button) {
+  font-size: 14px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #076bff;
+  text-decoration: none;
+}
+.sg-course-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.sg-course {
+  border: 1px solid #e7edf7;
+  border-radius: 14px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  gap: 9px 14px;
+  align-items: start;
+}
+.sg-course > img {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 11px;
+}
+.sg-course-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.sg-course h3 {
+  font-size: 15px;
+}
+.sg-course-title > strong {
+  font-size: 15px;
+}
+.sg-course [data-slot='progress'] {
+  margin-top: 8px;
+}
+.sg-course-details > p {
+  font-size: 14px;
+  margin-top: 7px;
+}
+.sg-course-next {
+  grid-column: 1/-1;
+  font-size: 14px;
+  line-height: 1.4;
+  min-height: 20px;
+}
+.sg-course > .academy-button {
+  grid-column: 1/-1;
+  width: 100%;
+  margin-top: auto;
+}
+.sg-milestone h2 {
+  margin-bottom: 10px;
+}
+.sg-milestone-body {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+.sg-milestone-body > img {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+}
+.sg-milestone-copy {
+  flex: 1;
+  min-width: 0;
+}
+.sg-milestone-copy h3 {
+  font-size: 18px;
+}
+.sg-milestone-copy p {
+  font-size: 14px;
+  margin: 3px 0 10px;
+}
+.sg-milestone-copy > div {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+.sg-milestone-copy > div > span {
+  font-size: 14px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+.sg-milestone-copy strong {
+  color: var(--foreground);
+}
+.sg-milestone-copy [data-slot='progress'] {
+  flex: 1;
+}
+.sg-xp {
+  background: #eef4ff;
+  color: #155bbb;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 20px;
+  font-weight: 750;
+  text-align: center;
+  white-space: nowrap;
+}
+.sg-xp small {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+  margin-top: 2px;
+}
+.sg-analysis-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.sg-week {
+  scroll-margin-top: 16px;
+}
+.sg-chart {
+  margin: 16px 0;
+}
+.sg-bars {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 17px;
+  padding: 0 3px;
+}
+.sg-bars > div {
+  display: grid;
+  gap: 7px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.sg-bar-column {
+  height: 68px;
+  display: flex;
+  align-items: flex-end;
+  border-bottom: 2px solid #eaf0f8;
+}
+.sg-bar-column > span {
+  display: block;
+  width: 100%;
+  background: #74a5ff;
+  border-radius: 6px 6px 0 0;
+}
+.sg-bar-column.future {
+  background: linear-gradient(0deg, #f0f4f9 45%, transparent 45%);
+  border-radius: 6px;
+}
+.sg-bars .today {
+  color: #076bff;
+  font-weight: 750;
+}
+.sg-chart > p {
+  font-size: 12px;
+  text-align: center;
+  margin-top: 7px;
+}
+.sg-week-metrics {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr 1fr;
+  gap: 12px;
+}
+.sg-week-metrics > div {
+  border-left: 1px solid #e7edf7;
+  padding-left: 14px;
+}
+.sg-week-metrics > div:first-child {
+  border: 0;
+  padding: 0;
+}
+.sg-week-metrics strong {
+  display: block;
+  font-size: 24px;
+  line-height: 1.2;
+}
+.sg-week-metrics span {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-top: 3px;
+}
+.sg-week-metrics small {
+  display: block;
+  font-size: 12px;
+}
+.sg-performance h2 {
+  margin-bottom: 24px;
+}
+.sg-performance-row {
+  display: grid;
+  grid-template-columns: 25px 110px minmax(45px, 1fr) 85px;
+  align-items: center;
+  gap: 10px;
+  margin: 22px 0;
+}
+.sg-performance-row:last-child {
+  margin-bottom: 0;
+}
+.sg-performance-row > svg {
+  color: #076bff;
+}
+.sg-performance-row > span {
+  font-size: 13px;
+}
+.sg-performance-row strong {
+  display: block;
+  font-size: 15px;
+  line-height: 1.2;
+}
+.sg-performance-row small {
+  display: block;
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+.skillup-progress .sg-review {
+  background: #fff8e8;
+  border-color: #fff0d0;
+}
+.sg-review-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.sg-review-item {
+  background: #ffffffdb;
+  border: 1px solid #fff;
+  border-radius: 14px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+.sg-review-icon {
+  width: 50px;
+  height: 56px;
+  border-radius: 15px;
+  background: #fff5df;
+  color: #e79a26;
+  display: grid;
+  place-items: center;
+}
+.sg-review-item h3 {
+  font-size: 14px;
+}
+.sg-review-item p {
+  font-size: 12px;
+  margin: 3px 0;
+}
+.sg-review-item > div > span {
+  font-size: 12px;
+}
+.sg-review-item strong {
+  color: #a76207;
+}
+.skillup-progress .sg-review-item .academy-button {
+  background: #ffedc6;
+  color: #955206;
+  font-size: 14px;
+  padding: 10px 12px;
+}
+.skillup-progress .sg-review-item .academy-button:hover {
+  background: #ffe2a3;
+}
+.sg-review-empty {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px 0;
+}
+.sg-review-empty svg {
+  flex-shrink: 0;
+  color: #b68128;
+}
+.sg-review-empty p {
+  font-size: 14px;
+}
+.sg-skills h2 {
+  margin-bottom: 10px;
+}
+.sg-skill {
+  display: grid;
+  grid-template-columns: 28px minmax(150px, 1fr) minmax(100px, 1.1fr) 47px;
+  align-items: center;
+  gap: 16px;
+  min-height: 38px;
+}
+.sg-skill > svg {
+  color: #076bff;
+}
+.sg-skill > span {
+  font-size: 14px;
+}
+.sg-skill > strong {
+  font-size: 14px;
+  text-align: right;
+}
+.sg-skill [data-slot='progress-indicator'] {
+  background: #528cff;
+}
+.skillup-progress .sg-month {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 18px 24px;
+}
+.sg-month > svg {
+  color: #076bff;
+  flex-shrink: 0;
+}
+.sg-month > div:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+.sg-month h2 {
+  text-transform: capitalize;
+  font-size: 20px;
+}
+.sg-month p {
+  font-size: 14px;
+  margin-top: 3px;
+}
+.sg-month-change {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--ink-soft);
+  max-width: 200px;
+  flex-shrink: 0;
+}
+.sg-month-change.positive {
+  color: #08ad65;
+}
+.sg-month-change strong {
+  font-size: 22px;
+}
+.sg-month-change span {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.sg-data-note {
+  font-size: 12px;
+  color: var(--ink-soft);
+  padding: 0 10px;
+  text-align: center;
+}
+.sg-complete {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 10px 0;
+}
+.sg-complete svg {
+  color: #076bff;
+}
+.sg-complete p {
+  font-size: 14px;
+}
+.academy-app[data-screen='progress'] > .bottom-navigation {
+  position: fixed;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1040px, 100%);
+  height: auto;
+  background: #fffffff2;
+  backdrop-filter: blur(14px);
+  border: 1px solid #e4edf7;
+  border-bottom: 0;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -3px 16px #244b7104;
+  padding: 6px 12px max(12px, env(safe-area-inset-bottom));
+  z-index: 30;
+}
+.academy-app[data-screen='progress'] > .bottom-navigation a {
+  min-height: 58px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  color: #51638c;
+  font-size: 14px;
+  border-radius: 15px;
+  text-decoration: none;
+}
+.academy-app[data-screen='progress'] > .bottom-navigation a svg {
+  width: 25px;
+  height: 25px;
+}
+.academy-app[data-screen='progress']
+  > .bottom-navigation
+  a[aria-current='page'] {
+  color: #076bff;
+  background: #e8f2ff;
+}
+.academy-app[data-screen='progress'] > .bottom-navigation a:focus-visible {
+  outline: 3px solid #80afff;
+  outline-offset: 1px;
+}
+@media (max-width: 950px) and (min-width: 701px) {
+  .sg-overview-grid {
+    gap: 12px;
+  }
+  .sg-overview-metric {
+    padding-left: 15px;
+  }
+  .sg-level > img {
+    width: 115px;
+    height: 115px;
+  }
+  .sg-streak-week {
+    gap: 13px;
+    padding-left: 17px;
+  }
+  .sg-performance-row {
+    grid-template-columns: 22px 80px minmax(35px, 1fr) 66px;
+    gap: 7px;
+  }
+  .sg-review-item {
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 10px;
+  }
+  .sg-review-icon {
+    width: 42px;
+  }
+  .sg-review-item .academy-button {
+    grid-column: 2;
+    justify-self: start;
+  }
+  .sg-course {
+    grid-template-columns: 75px 1fr;
+    gap: 10px;
+  }
+  .sg-course > img {
+    width: 75px;
+    height: 83px;
+  }
+}
+@media (max-width: 700px) {
+  .skillup-progress {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .sg-header {
+    height: 67px;
+  }
+  .sg-header h1 {
+    font-size: 23px;
+  }
+  .sg-layout {
+    gap: 12px;
+  }
+  .skillup-progress .academy-card {
+    padding: 17px;
+    border-radius: 18px;
+  }
+  .skillup-progress h2 {
+    font-size: 20px;
+  }
+  .sg-intro {
+    font-size: 14px;
+    line-height: 1.45;
+    margin-top: 4px !important;
+  }
+  .sg-overview-grid {
+    grid-template-columns: 126px 1fr;
+    gap: 16px 18px;
+    margin-top: 18px;
+  }
+  .sg-ring {
+    width: 126px;
+    grid-row: 1/4;
+    align-self: center;
+  }
+  .sg-ring strong {
+    font-size: 29px;
+  }
+  .sg-ring span {
+    font-size: 12px;
+  }
+  .sg-overview-metric {
+    min-height: 42px;
+    padding-left: 15px;
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    gap: 1px 9px;
+    align-items: center;
+    justify-content: start;
+  }
+  .sg-mini-icon {
+    width: 29px;
+    height: 29px;
+    grid-row: 1/3;
+  }
+  .sg-mini-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+  .sg-overview-metric > strong {
+    font-size: 23px;
+  }
+  .sg-overview-metric > span:last-child {
+    font-size: 12px;
+    line-height: 1.3;
+  }
+  .sg-overview-metric small {
+    font-size: 12px;
+  }
+  .skillup-progress .sg-level {
+    gap: 13px;
+    padding: 18px 14px;
+    align-items: flex-start;
+  }
+  .sg-level > img {
+    width: 73px;
+    height: 83px;
+    margin-top: 7px;
+  }
+  .sg-level-top {
+    display: block;
+  }
+  .sg-level h2 {
+    font-size: 25px;
+  }
+  .sg-level h3 {
+    font-size: 17px;
+    margin-top: 3px;
+  }
+  .sg-next-level {
+    display: inline-block;
+    margin-top: 9px;
+    font-size: 12px;
+    padding: 5px 8px;
+  }
+  .sg-level-content > p {
+    font-size: 15px;
+    margin-top: 10px;
+  }
+  .sg-level .sg-level-remaining {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .sg-level [data-slot='progress-track'] {
+    height: 10px;
+  }
+  .skillup-progress .sg-streak {
+    display: block;
+    padding: 16px;
+  }
+  .sg-streak-copy {
+    gap: 14px;
+  }
+  .sg-flame {
+    width: 53px;
+    height: 53px;
+  }
+  .sg-flame svg {
+    width: 30px;
+  }
+  .sg-streak h2 {
+    font-size: 18px;
+  }
+  .sg-streak-copy p {
+    font-size: 13px;
+  }
+  .sg-streak-week {
+    border-left: 0;
+    border-top: 1px solid #e8eef7;
+    padding: 14px 5px 0;
+    margin-top: 14px;
+    gap: 12px;
+  }
+  .sg-streak-week > div {
+    font-size: 12px;
+    gap: 8px;
+  }
+  .sg-streak-week i {
+    width: 22px;
+    height: 22px;
+  }
+  .skillup-progress :is(.academy-section-heading, .sg-section-heading) {
+    margin-bottom: 8px;
+  }
+  .skillup-progress
+    :is(.academy-section-heading a, .sg-section-heading button) {
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .sg-course-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .sg-course {
+    grid-template-columns: 75px minmax(0, 1fr);
+    gap: 10px 12px;
+    padding: 12px;
+  }
+  .sg-course > img {
+    width: 75px;
+    height: 80px;
+  }
+  .sg-course h3 {
+    font-size: 14px;
+  }
+  .sg-course-title {
+    gap: 9px;
+  }
+  .sg-course-title > strong {
+    font-size: 14px;
+  }
+  .sg-course-details > p {
+    font-size: 13px;
+  }
+  .sg-course-next {
+    font-size: 14px;
+    min-height: 0;
+  }
+  .skillup-progress .sg-course > .academy-button {
+    min-height: 44px;
+    font-size: 15px;
+  }
+  .sg-milestone-body {
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .sg-milestone-body > img {
+    width: 66px;
+    height: 72px;
+  }
+  .sg-milestone-copy {
+    flex: 1;
+    min-width: 180px;
+  }
+  .sg-milestone-copy h3 {
+    font-size: 17px;
+  }
+  .sg-milestone-copy p {
+    font-size: 13px;
+  }
+  .sg-milestone-copy > div {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 7px;
+  }
+  .sg-milestone-copy > div > span {
+    font-size: 13px;
+  }
+  .sg-xp {
+    font-size: 15px;
+    padding: 7px 10px;
+    margin-left: 78px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sg-xp small {
+    margin: 0;
+    font-size: 12px;
+  }
+  .sg-analysis-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .sg-bars {
+    gap: 20px;
+    padding: 0 5px;
+  }
+  .sg-bar-column {
+    height: 75px;
+  }
+  .sg-chart {
+    margin: 18px 0;
+  }
+  .sg-week-metrics {
+    gap: 12px;
+  }
+  .sg-week-metrics > div {
+    padding-left: 12px;
+  }
+  .sg-week-metrics strong {
+    font-size: 24px;
+  }
+  .sg-week-metrics span {
+    font-size: 12px;
+  }
+  .sg-performance h2 {
+    margin-bottom: 18px;
+  }
+  .sg-performance-row {
+    grid-template-columns: 23px 87px minmax(40px, 1fr) 70px;
+    gap: 8px;
+    margin: 22px 0;
+  }
+  .sg-performance-row > span {
+    font-size: 13px;
+  }
+  .sg-performance-row small {
+    font-size: 12px;
+  }
+  .sg-performance-row strong {
+    font-size: 15px;
+  }
+  .sg-review-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .sg-review-item {
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 8px 12px;
+    padding: 12px;
+  }
+  .sg-review-icon {
+    width: 42px;
+    height: 50px;
+  }
+  .sg-review-item h3 {
+    font-size: 15px;
+  }
+  .sg-review-item p {
+    font-size: 13px;
+  }
+  .sg-review-item > div > span {
+    font-size: 13px;
+  }
+  .sg-review-item .academy-button {
+    grid-column: 2;
+    justify-self: start;
+    min-width: 92px;
+  }
+  .sg-skill {
+    grid-template-columns: 25px minmax(0, 1fr) 43px;
+    gap: 7px 10px;
+    padding: 10px 0;
+    min-height: 64px;
+  }
+  .sg-skill > span {
+    font-size: 14px;
+  }
+  .sg-skill > strong {
+    grid-column: 3;
+    grid-row: auto;
+    font-size: 14px;
+  }
+  .sg-skill [data-slot='progress'] {
+    grid-column: 2/4;
+    grid-row: span 1;
+    order: 4;
+  }
+  .sg-skill [data-slot='progress-track'] {
+    height: 8px;
+  }
+  .skillup-progress .sg-month {
+    display: grid;
+    grid-template-columns: 29px minmax(0, 1fr);
+    gap: 10px 15px;
+    padding: 18px;
+  }
+  .sg-month h2 {
+    font-size: 20px;
+  }
+  .sg-month p {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .sg-month-change {
+    grid-column: 2;
+    max-width: none;
+    gap: 12px;
+    margin-top: 3px;
+  }
+  .sg-month-change strong {
+    font-size: 20px;
+  }
+  .sg-month-change span {
+    font-size: 12px;
+  }
+  .academy-app[data-screen='progress'] > .bottom-navigation a {
+    font-size: 12px;
+    min-height: 58px;
+  }
+  .academy-app[data-screen='progress'] > .bottom-navigation {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+@media (max-width: 370px) {
+  .skillup-progress {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .skillup-progress .academy-card {
+    padding: 14px;
+  }
+  .sg-overview-grid {
+    grid-template-columns: 110px 1fr;
+    gap: 13px;
+  }
+  .sg-ring {
+    width: 110px;
+  }
+  .sg-overview-metric {
+    padding-left: 10px;
+    gap: 1px 7px;
+  }
+  .sg-level > img {
+    width: 60px;
+  }
+  .sg-performance-row {
+    grid-template-columns: 21px 79px minmax(24px, 1fr) 63px;
+    gap: 6px;
+  }
+  .sg-performance-row > span {
+    font-size: 12px;
+  }
+  .sg-milestone-copy {
+    min-width: 160px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skillup-progress * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}

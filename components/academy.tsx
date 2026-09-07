@@ -87,13 +87,19 @@ export function XPChip({ xp }: { xp: number }) {
     </span>
   );
 }
-export function BottomNavigation({ screen }: { screen: Screen }) {
+export function BottomNavigation({
+  screen,
+  courseLabel = 'Lezioni',
+}: {
+  screen: Screen;
+  courseLabel?: string;
+}) {
   return (
     <nav className="bottom-navigation" aria-label="Navigazione principale">
       {(
         [
           ['home', 'Home', Home],
-          ['lessons', 'Lezioni', BookOpen],
+          ['lessons', courseLabel, BookOpen],
           ['progress', 'Progressi', ChartNoAxesColumnIncreasing],
           ['profile', 'Profilo', UserRound],
         ] as const

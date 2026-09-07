@@ -1517,3 +1517,48 @@
     gap: 12px;
   }
 }
+.lp-guided-step {
+  color: #0868ff;
+  font-size: 14px;
+  font-weight: 650;
+  margin: 20px 0 14px;
+}
+.lp-guided h2 {
+  color: #102454;
+  font-size: 24px;
+  margin: 24px 0 16px;
+}
+.lp-guided .lp-option {
+  align-items: flex-start;
+}
+.lp-guided .lp-option > span:nth-child(2) {
+  line-height: 1.6;
+}
+.lp-guided-choice {
+  padding: 18px 20px;
+  border: 1px solid #c8e5d6;
+  border-radius: 18px;
+  background: #f3faf6;
+  animation: lp-fade 200ms both;
+}
+.lp-guided-choice > strong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #24704b;
+  font-size: 15px;
+}
+.lp-guided-choice > p {
+  color: #425c51;
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 10px 0 0;
+}
+.lp-guided-choice button {
+  min-height: 44px;
+  color: #246d4c;
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}

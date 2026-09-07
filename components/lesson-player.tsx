@@ -545,6 +545,95 @@ function QuizFeedback({
     </div>
   );
 }
+function GuidedPractice({
+  activity,
+  state,
+  onChange,
+  onSubmit,
+  feedback,
+}: {
+  activity: import('../app/learning-model').Activity;
+  state: LearningState;
+  onChange: Change;
+  onSubmit: (candidate: LearningState) => void;
+  feedback?: boolean;
+}) {
+  const guided = activity.guided!;
+  const response = state.responses[activity.id] || [];
+  const [wrongCount, setWrongCount] = useState(0);
+  const choseCorrect = response[0] === activity.interaction!.correct[0];
+  const choiceIndex =
+    response[0] === 'choice-a' ? 0 : response[0] === 'choice-b' ? 1 : undefined;
+  const update = (values: string[]) => ({
+    ...state,
+    responses: { ...state.responses, [activity.id]: values },
+  });
+  return (
+    <div className="lp-guided">
+      <p className="lp-guided-step">
+        {choseCorrect
+          ? '2 / 2 · Le ragioni della scelta'
+          : '1 / 2 · Confronta le alternative'}
+      </p>
+      {!choseCorrect ? (
+        <>
+          <MultipleChoiceActivity
+            title={activity.title}
+            options={guided.choices}
+            value={choiceIndex}
+            feedback={choiceIndex === undefined ? undefined : false}
+            onValue={(index) => {
+              const id = index === 0 ? 'choice-a' : 'choice-b';
+              if (id !== activity.interaction!.correct[0])
+                setWrongCount((value) => value + 1);
+              onChange(update([id]));
+            }}
+          />
+          {choiceIndex !== undefined && (
+            <QuizFeedback correct={false}>
+              {activity.interaction!.hint}
+              {wrongCount >= 2 && (
+                <span className="lp-solution">
+                  Concentrati sull’alternativa{' '}
+                  {activity.interaction!.correct[0] === 'choice-a' ? 'A' : 'B'}:{' '}
+                  {activity.interaction!.explanation}
+                </span>
+              )}
+            </QuizFeedback>
+          )}
+        </>
+      ) : (
+        <>
+          <div className="lp-guided-choice">
+            <strong>
+              <Check size={18} /> Scelta corretta
+            </strong>
+            <p>{guided.choices[choiceIndex!]}</p>
+            <button type="button" onClick={() => onChange(update([]))}>
+              Rivedi il confronto
+            </button>
+          </div>
+          <h2>Perché funziona meglio?</h2>
+          <MultipleChoiceActivity
+            title="Perché questa alternativa è migliore?"
+            options={guided.reasons.map((reason) => reason.label)}
+            value={
+              response[1] === undefined
+                ? undefined
+                : guided.reasons.findIndex(
+                    (reason) => reason.id === response[1],
+                  )
+            }
+            feedback={feedback}
+            onValue={(index) =>
+              onSubmit(update([response[0], guided.reasons[index].id]))
+            }
+          />
+        </>
+      )}
+    </div>
+  );
+}
 function ExamPlayer({
   state,
   ready,
@@ -1029,7 +1118,7 @@ export function LessonPlayer({
           total={total}
           dots={kind === 'slide'}
           prompt={
-            activity.question && !feedback?.correct
+            (activity.question || activity.guided) && !feedback?.correct
               ? feedback
                 ? 'Tocca un’altra risposta'
                 : 'Tocca una risposta'
@@ -1127,7 +1216,21 @@ export function LessonPlayer({
               }}
             />
           )}
-          {activity.interaction && (
+          {activity.guided && (
+            <GuidedPractice
+              key={activity.id}
+              activity={activity}
+              state={state}
+              feedback={feedback?.correct}
+              onSubmit={submit}
+              onChange={(value) => {
+                cancelFlow();
+                setChecked(null);
+                onChange(value);
+              }}
+            />
+          )}
+          {activity.interaction && !activity.guided && (
             <StructuredInteraction
               activity={activity}
               state={state}
@@ -1164,15 +1267,17 @@ export function LessonPlayer({
                   <strong>La soluzione</strong>
                   {activity.question
                     ? activity.question.options[activity.question.correct]
-                    : activity.interaction?.correct
-                        .map(
-                          (id) =>
-                            [
-                              ...(activity.interaction?.options || []),
-                              ...(activity.interaction?.items || []),
-                            ].find((item) => item.id === id)?.label || id,
-                        )
-                        .join(' → ')}
+                    : activity.guided
+                      ? activity.interaction?.explanation
+                      : activity.interaction?.correct
+                          .map(
+                            (id) =>
+                              [
+                                ...(activity.interaction?.options || []),
+                                ...(activity.interaction?.items || []),
+                              ].find((item) => item.id === id)?.label || id,
+                          )
+                          .join(' → ')}
                   <br />
                   {activity.question?.why || activity.interaction?.explanation}
                 </span>

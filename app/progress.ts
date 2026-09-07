@@ -258,8 +258,10 @@ export function completeActivity(
           xp: activity.xpReward,
           evidence: activity.question
             ? `Risposta ${String.fromCharCode(65 + s.answers[id])}: ${activity.question?.why}`
-            : s.drafts[id]?.trim() ||
-              'Conferma esplicita di lettura e comprensione.',
+            : activity.guided
+              ? `Scelta motivata: ${activity.interaction?.explanation}`
+              : s.drafts[id]?.trim() ||
+                'Conferma esplicita di lettura e comprensione.',
           source: 'current',
         },
       },

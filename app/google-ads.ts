@@ -1,3 +1,4 @@
+import { guidedPractice } from './guided-practice.ts';
 import { presentLessonSlide } from './lesson-content.ts';
 import { PHASES, type Activity } from './learning-model.ts';
 import { XP_REWARDS } from './learning-config.ts';
@@ -629,6 +630,9 @@ const makeModule = (n: number): CourseModule => {
       xpReward: XP_REWARDS.module,
     },
   ];
+  activities.forEach((activity, i) => {
+    activities[i] = guidedPractice(activity, 'google-ads', n);
+  });
   return {
     id,
     title: data.title,
@@ -798,6 +802,9 @@ const examActivities: Activity[] = [
     xpReward: XP_REWARDS.module,
   },
 ];
+examActivities.forEach((activity, i) => {
+  examActivities[i] = guidedPractice(activity, 'google-ads', 6);
+});
 modules.push({
   id: examId,
   title: 'Exam Simulation',

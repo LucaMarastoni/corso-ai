@@ -1,3 +1,4 @@
+import { guidedPractice } from './guided-practice.ts';
 import { levels } from './journey.ts';
 import { presentLessonSlide, type LessonSlide } from './lesson-content.ts';
 import { XP_REWARDS } from './learning-config.ts';
@@ -65,6 +66,7 @@ export type Activity = {
     explanation: string;
     hint: string;
   };
+  guided?: { choices: string[]; reasons: { id: string; label: string }[] };
   sourceUrls?: string[];
 };
 const practice = [
@@ -225,6 +227,9 @@ export const courseModules = levels.map((level, index) => {
       xpReward: XP_REWARDS.module,
     },
   ];
+  activities.forEach((activity, i) => {
+    activities[i] = guidedPractice(activity, 'ai-basics', index);
+  });
   return {
     id: prefix,
     title: level.title,

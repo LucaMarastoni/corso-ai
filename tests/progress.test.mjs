@@ -46,6 +46,14 @@ export function prepareActivity(s, activity) {
       },
     };
   }
+  if (activity.interaction)
+    s = {
+      ...s,
+      responses: {
+        ...s.responses,
+        [activity.id]: [...activity.interaction.correct],
+      },
+    };
   return s;
 }
 export function finishModule(s, n) {
@@ -110,7 +118,7 @@ test('Opening content does not award XP or study days; later phases and modules 
     initialState,
   );
 });
-test('Practice requires learn, a saved draft and an explicit checklist; no fake semantic grade', () => {
+test('Practice requires a correct choice and reason; old drafts and checklists cannot earn XP', () => {
   let s = initialState;
   for (const a of courseModules[0].phases[0].activities)
     s = completeActivity(s, 0, a.id, now);
@@ -124,6 +132,17 @@ test('Practice requires learn, a saved draft and an explicit checklist; no fake 
   );
   assert.equal(canCompleteActivity(s, 0, practice), false);
   s = { ...s, activityChecks: { [practice.id]: [0] } };
+  assert.equal(canCompleteActivity(s, 0, practice), false);
+  s = { ...s, responses: { [practice.id]: [practice.interaction.correct[0]] } };
+  assert.equal(canCompleteActivity(s, 0, practice), false);
+  s = {
+    ...s,
+    responses: {
+      [practice.id]: [practice.interaction.correct[0], 'reason-length'],
+    },
+  };
+  assert.equal(canCompleteActivity(s, 0, practice), false);
+  s = prepareActivity(s, practice);
   s = completeActivity(s, 0, practice.id, now);
   assert.equal(score(s), 35);
 });
@@ -156,7 +175,7 @@ test('No module reward, achievement or competency until application and unlock a
   assert.ok(s.competencyAwards['fundamental-prompting']);
   assert.equal(
     s.competencyAwards['fundamental-prompting'].evidence,
-    s.drafts[apply.id],
+    s.completedActivities[apply.id].evidence,
   );
   assert.equal(s.competencyAwards['fundamental-prompting'].acquiredAt, now);
 });

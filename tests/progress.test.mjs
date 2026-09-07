@@ -258,7 +258,7 @@ test('Legacy completed modules retain exact XP, notes, awards and explicit exemp
   );
   assert.deepEqual(restore(serialize(result)), result);
 });
-test('Legacy partial work preserves correct answers but introduces practice as a real missing prerequisite', () => {
+test('Legacy partial work preserves quiz position and keeps practice required for module completion', () => {
   const result = restore(
     JSON.stringify({
       ...legacyState(0),
@@ -268,7 +268,8 @@ test('Legacy partial work preserves correct answers but introduces practice as a
     }),
   );
   assert.equal(score(result), 20);
-  assert.equal(result.step, 3);
+  assert.equal(result.step, 4);
+  assert.equal(canFinish(result, 0), false);
   assert.equal(result.completedActivities['module-1:practice'], undefined);
   assert.equal(result.achievementAwards['signal-frame'].source, 'legacy');
   assert.equal(Object.keys(result.competencyAwards).length, 0);

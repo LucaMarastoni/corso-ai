@@ -15,7 +15,9 @@ export function StructuredInteraction({
   activity,
   state,
   onChange,
+  showFeedback = true,
 }: {
+  showFeedback?: boolean;
   activity: Activity;
   state: LearningState;
   onChange: Dispatch<SetStateAction<LearningState>>;
@@ -97,7 +99,7 @@ export function StructuredInteraction({
           ))}
         </ol>
       )}
-      {answered && (
+      {showFeedback && answered && (
         <div
           className={`feedback ${correct ? 'success' : 'retry'}`}
           aria-live="polite"

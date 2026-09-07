@@ -1,67 +1,40 @@
+import { introSlides } from './lesson-content.ts';
 export const levels = [
   {
     title: 'Primo contatto',
     tag: 'ESPLORATORE',
     goal: 'Scopri che cosa puoi chiedere a un’AI.',
-    slides: [
-      {
-        title: 'AI: partiamo dalle parole',
-        steps: [
-          'AI significa intelligenza artificiale. È un nome che raccoglie diversi tipi di sistemi informatici.',
-          'Qui useremo l’AI generativa: produce contenuti, per esempio un testo, a partire da una richiesta.',
-          'Puoi chiederle una bozza, una spiegazione o delle idee. Sei tu a decidere se il risultato è utile.',
-        ],
-        takeaway: 'Tu dai la direzione. L’AI propone.',
-      },
-      {
-        title: 'Una conversazione, tre passaggi',
-        steps: [
-          '1. Scrivi una richiesta. Il messaggio che invii si chiama prompt.',
-          '2. Leggi la risposta. È un risultato da esaminare, non una garanzia di verità.',
-          '3. Chiedi una modifica. Puoi dire che cosa tenere e che cosa migliorare.',
-        ],
-        takeaway: 'Richiesta → risposta → revisione',
-      },
-      {
-        title: 'Una bella risposta può sbagliare',
-        steps: [
-          'Il sistema ha appreso regolarità da molti esempi e genera testo in base al contesto.',
-          'Può costruire una frase credibile anche quando un fatto è sbagliato o manca un’informazione.',
-          'Inizia da compiti che puoi controllare: riscrivere un messaggio, organizzare un elenco, proporre titoli.',
-        ],
-        takeaway: 'Chiaro e convincente non significa verificato.',
-      },
-    ],
+    slides: introSlides,
     challenges: [
       {
-        goal: 'Vuoi partire da un compito facile da controllare. Quale prompt scegli?',
+        goal: 'Quale prompt è più efficace?',
         options: [
-          'Dimmi con certezza quanto costa oggi ogni bici in vendita nella mia città.',
-          'Riscrivi più chiaramente questo messaggio: «Vorrei fissare un appuntamento per la bici».',
+          'Scrivimi una mail',
+          'Scrivi una mail professionale di massimo 120 parole per chiedere conferma di un appuntamento',
         ],
         correct: 1,
-        why: 'B fornisce il testo da trasformare: puoi confrontare prima e dopo. A chiede molti dati aggiornati senza fornire fonti; una risposta non sarebbe una garanzia.',
-        hint: 'Scegli il compito per cui hai già un riferimento.',
+        why: 'Il secondo prompt specifica obiettivo, formato e vincoli.',
+        hint: 'Cerca una richiesta che chiarisca cosa ottenere e quali limiti rispettare.',
       },
       {
-        goal: 'Vuoi capire una parola nuova, senza conoscenze tecniche.',
+        goal: 'Da che cosa parte un modello AI per produrre un risultato?',
         options: [
-          'Spiega “prompt” a un principiante e fai un esempio di una richiesta quotidiana.',
-          'Spiega “prompt” usando termini specialistici, senza esempi o definizioni.',
+          'Da ciò che ha imparato e dalle informazioni ricevute.',
+          'Dal nulla, senza dati o istruzioni.',
         ],
         correct: 0,
-        why: 'A adatta la spiegazione al tuo livello. B potrebbe servire a un esperto, ma non al principiante descritto nella consegna.',
-        hint: 'Il prompt deve essere adatto a chi leggerà.',
+        why: 'Un modello riconosce schemi appresi e usa le informazioni ricevute per produrre un risultato.',
+        hint: 'Ripensa al percorso: dati, modello AI, risultato.',
       },
       {
-        goal: 'Vuoi ottenere idee da valutare, senza promesse impossibili.',
+        goal: 'Qual è il tuo ruolo quando usi l’AI generativa?',
         options: [
-          'Dammi il titolo che farà sicuramente comprare il mio prodotto a tutti.',
-          'Proponi tre titoli per una pagina di riparazione bici; li confronterò prima di sceglierne uno.',
+          'Accettare ogni risposta come automaticamente corretta.',
+          'Dare una direzione chiara e controllare che il risultato sia utile.',
         ],
         correct: 1,
-        why: 'B chiede alternative da valutare. A pretende un risultato commerciale che il titolo da solo non può garantire.',
-        hint: 'Idee da confrontare o certezza impossibile?',
+        why: 'Le istruzioni umane guidano il risultato. Sei tu a valutarlo prima di utilizzarlo.',
+        hint: 'Un output è una proposta: la direzione e il controllo restano tuoi.',
       },
     ],
     lab: 'Prenditi 4 minuti. Immagina un’attività quotidiana in cui vorresti aiuto: riscrivere un messaggio, capire una parola o mettere in ordine delle idee. Scrivi una richiesta e spiega come controlleresti il risultato.',

@@ -1,4 +1,4 @@
-import { PHASES, type Activity } from './learning-model.ts';
+import { PHASES, lessonActivities, type Activity } from './learning-model.ts';
 import {
   getCourse,
   DEFAULT_COURSE_ID,
@@ -129,6 +129,9 @@ export function activityAvailable(
   activity: Activity,
 ) {
   if (n > unlock(s)) return false;
+  // Verification follows the slides in the player. Previously completed practice
+  // remains valid; application still requires both practice and verification.
+  if (activity.phase === 'verify') return phaseComplete(s, n, 'learn');
   const phaseIndex = PHASES.findIndex((phase) => phase.id === activity.phase);
   return PHASES.slice(0, phaseIndex).every((phase) =>
     phaseComplete(s, n, phase.id),
@@ -149,6 +152,13 @@ export function canCompleteActivity(
 ) {
   if (!activityAvailable(s, n, activity)) return false;
   const rule = activity.completionRule;
+  if (rule.kind === 'checklist')
+    return (
+      !!rule.checklist?.length &&
+      rule.checklist.every((_, i) =>
+        (s.activityChecks[activity.id] || []).includes(i),
+      )
+    );
   if (rule.kind === 'textChecklist')
     return (
       (s.drafts[activity.id] || '').trim().length >= (rule.minLength || 0) &&
@@ -789,5 +799,8 @@ export function continueMicroLesson(
     return s;
   const next = completeActivity(s, moduleIndex, activityId, now);
   if (!isActivityComplete(next, activityId)) return s;
-  return { ...next, step: Math.min(index + 1, activities.length - 1) };
+  const ordered = lessonActivities(activities);
+  const position = ordered.findIndex((a) => a.id === activityId);
+  const following = ordered[position + 1];
+  return { ...next, step: following ? activities.indexOf(following) : index };
 }

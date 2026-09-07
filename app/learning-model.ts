@@ -1,4 +1,5 @@
 import { levels } from './journey.ts';
+import type { LessonSlide } from './lesson-content.ts';
 import { XP_REWARDS } from './learning-config.ts';
 export type PhaseId = 'learn' | 'practice' | 'verify' | 'apply' | 'unlock';
 export const PHASES: { id: PhaseId; name: string; purpose: string }[] = [
@@ -29,6 +30,7 @@ export type Activity = {
   type:
     | 'microLesson'
     | 'textInput'
+    | 'checklist'
     | 'comparison'
     | 'scenario'
     | 'unlock'
@@ -43,6 +45,7 @@ export type Activity = {
     kind:
       | 'acknowledge'
       | 'textChecklist'
+      | 'checklist'
       | 'correctAnswer'
       | 'allPhases'
       | 'correctSequence'
@@ -51,7 +54,7 @@ export type Activity = {
     checklist?: string[];
   };
   xpReward: number;
-  slide?: (typeof levels)[number]['slides'][number];
+  slide?: LessonSlide;
   question?: (typeof levels)[number]['challenges'][number];
   model?: string;
   questionLabel?: string;
@@ -249,3 +252,16 @@ export const activityById = (id: string) =>
   courseModules
     .flatMap((module) => module.activities)
     .find((activity) => activity.id === id);
+
+// Presentation order is independent of saved numeric activity indexes.
+export const LESSON_PHASE_ORDER: PhaseId[] = [
+  'learn',
+  'verify',
+  'practice',
+  'apply',
+  'unlock',
+];
+export const lessonActivities = (activities: Activity[]) =>
+  LESSON_PHASE_ORDER.flatMap((phase) =>
+    activities.filter((activity) => activity.phase === phase),
+  );

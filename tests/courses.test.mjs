@@ -174,11 +174,14 @@ test('One Continue confirms a micro-lesson, awards XP, advances phases, and igno
     for (let i = 0; i < 3; i++) {
       const id = activities[i].id;
       s = continueMicroLesson(s, 0, id);
-      assert.equal(s.step, i + 1);
+      assert.equal(
+        s.step,
+        i < 2 ? i + 1 : activities.findIndex((a) => a.phase === 'verify'),
+      );
       assert.equal(score(s), (i + 1) * 5);
       assert.equal(continueMicroLesson(s, 0, id), s);
     }
-    assert.equal(s.step, 3);
+    assert.equal(activities[s.step].phase, 'verify');
     assert.equal(continueMicroLesson(s, 0, activities[3].id), s);
     s = { ...s, step: 0 };
     s = continueMicroLesson(s, 0, activities[0].id);

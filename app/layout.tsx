@@ -4,6 +4,7 @@ import './mobile.css';
 import './skillup.css';
 import './profile.css';
 import './progress-dashboard.css';
+import './lesson-player.css';
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,

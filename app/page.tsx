@@ -8,15 +8,12 @@ import {
   LessonHeader,
   type Screen,
 } from '../components/academy';
-import {
-  LearningExperience,
-  LevelCard,
-  NextMilestone,
-} from '../components/learning';
+import { LevelCard, NextMilestone } from '../components/learning';
 import { getCourse, DEFAULT_COURSE_ID } from './courses';
 import type { Course } from './course-types';
 import { SkillUpHome } from '../components/skillup-home';
 import { SkillUpProfile } from '../components/skillup-profile';
+import { LessonPlayer } from '../components/lesson-player';
 import { SkillUpProgress } from '../components/skillup-progress';
 import { progressActivity } from './progress-dashboard';
 import { learningLevel } from './learning-config';
@@ -325,25 +322,13 @@ function CourseApp({ course }: { course: Course }) {
     if (!ready || !activity || !activityAvailable(state, levelIndex, activity))
       return;
     stop();
-    if (window.matchMedia('(max-width: 768px)').matches)
-      window.location.hash = 'lesson';
+    window.location.hash = 'lesson';
     navTriggered.current = true;
     setState((s) => ({ ...s, level: levelIndex, step: nextStep }));
   }
   function resumeCourse() {
-    const current = courseModules[l].activities[step];
-    if (!Object.hasOwn(state.completedActivities, current.id))
-      return navigate(l, step);
-    const nextModule = unlock(state);
-    const nextStep = courseModules[nextModule].activities.findIndex(
-      (activity) =>
-        !Object.hasOwn(state.completedActivities, activity.id) &&
-        activityAvailable(state, nextModule, activity),
-    );
-    navigate(
-      nextModule,
-      nextStep < 0 ? courseModules[nextModule].activities.length - 1 : nextStep,
-    );
+    const target = progressActivity(state);
+    if (target) navigate(target.moduleIndex, target.step);
   }
   function openProgressActivity(courseId: string, activityId: string) {
     if (!ready) return;
@@ -739,7 +724,7 @@ function CourseApp({ course }: { course: Course }) {
           ))}
         </nav>
         <div className="lesson-layout">
-          <LearningExperience
+          <LessonPlayer
             state={state}
             ready={ready}
             onChange={setState}
@@ -748,82 +733,6 @@ function CourseApp({ course }: { course: Course }) {
               state.certificateId
                 ? setShowCertificate(true)
                 : setShowFinale(true)
-            }
-            audio={
-              <>
-                <div className="audio-controls">
-                  <button
-                    className="audio-button"
-                    onClick={listen}
-                    disabled={!supported || !ready}
-                  >
-                    {audioState === 'playing' ? (
-                      <Pause size={18} />
-                    ) : (
-                      <Play size={18} fill="currentColor" />
-                    )}
-                    {audioState === 'playing'
-                      ? 'Pausa'
-                      : audioState === 'paused'
-                        ? 'Riprendi'
-                        : 'Ascolta la slide'}
-                  </button>
-                  {audioState !== 'idle' && (
-                    <button
-                      className="icon-button"
-                      onClick={stop}
-                      aria-label="Interrompi audio"
-                    >
-                      <Square size={17} />
-                    </button>
-                  )}
-                  <span className="audio-caption">
-                    Testo completo sempre visibile
-                  </span>
-                </div>
-                <details className="audio-settings">
-                  <summary>Voce e accessibilità</summary>
-                  <p>
-                    Voce sintetica del browser, senza abbonamenti. Qualità e
-                    disponibilità dipendono dal dispositivo. L’audio parte
-                    soltanto quando lo richiedi.
-                  </p>
-                  {voices.length > 0 && (
-                    <label>
-                      Voce italiana{' '}
-                      <select
-                        value={voice || voices[0].voiceURI}
-                        onChange={(e) => {
-                          stop();
-                          setVoice(e.target.value);
-                        }}
-                      >
-                        {voices.map((v) => (
-                          <option value={v.voiceURI} key={v.voiceURI}>
-                            {v.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  )}
-                  {!supported && ready && (
-                    <p>
-                      Questo browser non supporta la lettura audio: puoi
-                      completare il corso leggendo tutte le slide.
-                    </p>
-                  )}
-                  <a
-                    href="https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Informazioni sulla lettura del browser
-                  </a>
-                </details>
-                <p role="status" className="audio-error">
-                  {audioError}
-                </p>
-              </>
             }
           />
           <aside className="mission-aside">

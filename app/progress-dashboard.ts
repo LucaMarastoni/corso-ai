@@ -5,6 +5,7 @@ import {
   score,
   type LearningState,
 } from './progress.ts';
+import { lessonActivities } from './learning-model.ts';
 import { learningLevel } from './learning-config.ts';
 
 export function localDay(date: Date): string {
@@ -36,13 +37,17 @@ export function progressActivity(state: LearningState, activityId?: string) {
   )
     return { moduleIndex: state.level, step: state.step, activity: current };
   for (const [moduleIndex, module] of course.modules.entries()) {
-    const step = module.activities.findIndex(
+    const activity = lessonActivities(module.activities).find(
       (a) =>
         !state.completedActivities[a.id] &&
         activityAvailable(state, moduleIndex, a),
     );
-    if (step >= 0)
-      return { moduleIndex, step, activity: module.activities[step] };
+    if (activity)
+      return {
+        moduleIndex,
+        step: module.activities.indexOf(activity),
+        activity,
+      };
   }
   return { moduleIndex: 0, step: 0, activity: course.modules[0].activities[0] };
 }

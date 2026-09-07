@@ -1,23 +1,12 @@
 import { getCourse, courseActivityCount } from '../app/courses';
-import { ExamMode, StructuredInteraction } from './exam';
-import {
-  useState,
-  useEffect,
-  useRef,
-  type ReactNode,
-  type Dispatch,
-  type SetStateAction,
-} from 'react';
-import { ArrowLeft, ArrowRight, Check, Lock } from 'lucide-react';
-import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import { useState, type Dispatch, type SetStateAction } from 'react';
+import { ArrowRight, Check } from 'lucide-react';
 import { Checkbox } from './ui/checkbox';
 import { Progress } from './ui/progress';
 import {
   AcademyButton,
   AcademyCard,
   SectionHeader,
-  LessonBlock,
-  InsightCard,
   BadgeTile,
   StreakCard,
 } from './academy';
@@ -33,9 +22,6 @@ import {
   isActivityComplete,
   phaseComplete,
   activityAvailable,
-  canCompleteActivity,
-  completeActivity,
-  continueMicroLesson,
   setDraft,
 } from '../app/progress';
 export function CompetencyList({ state }: { state: LearningState }) {
@@ -337,7 +323,7 @@ export function LearningPhaseHeader({
     </header>
   );
 }
-function ActivityText({
+export function ActivityText({
   activity,
   state,
   onChange,
@@ -349,24 +335,30 @@ function ActivityText({
   const checklist = activity.completionRule.checklist || [];
   return (
     <div className="activity-text">
-      <label htmlFor={`draft-${activity.id}`}>
-        Il tuo {activity.type === 'scenario' ? 'elaborato' : 'primo tentativo'}
-      </label>
-      <textarea
-        id={`draft-${activity.id}`}
-        value={state.drafts[activity.id] || ''}
-        maxLength={20000}
-        rows={6}
-        onChange={(event) =>
-          onChange((current) =>
-            setDraft(current, activity.id, event.target.value),
-          )
-        }
-      />
-      <p className="micro-note">
-        Controllo locale: almeno {activity.completionRule.minLength} caratteri e
-        conferma della checklist. Non è una valutazione AI del contenuto.
-      </p>
+      {activity.type !== 'checklist' && (
+        <>
+          <label htmlFor={`draft-${activity.id}`}>
+            Il tuo{' '}
+            {activity.type === 'scenario' ? 'elaborato' : 'primo tentativo'}
+          </label>
+          <textarea
+            id={`draft-${activity.id}`}
+            value={state.drafts[activity.id] || ''}
+            maxLength={20000}
+            rows={6}
+            onChange={(event) =>
+              onChange((current) =>
+                setDraft(current, activity.id, event.target.value),
+              )
+            }
+          />
+          <p className="micro-note">
+            Controllo locale: almeno {activity.completionRule.minLength}{' '}
+            caratteri e conferma della checklist. Non è una valutazione AI del
+            contenuto.
+          </p>
+        </>
+      )}
       <div className="self-check">
         {checklist.map((text, i) => (
           <label key={text}>
@@ -451,295 +443,5 @@ export function ModuleCompletion({
         moduli completati
       </small>
     </AcademyCard>
-  );
-}
-export function LearningExperience({
-  state,
-  ready,
-  onChange,
-  onNavigate,
-  onCertificate,
-  audio,
-}: {
-  state: LearningState;
-  ready: boolean;
-  onChange: Dispatch<SetStateAction<LearningState>>;
-  onNavigate: (module: number, step?: number) => void;
-  onCertificate: () => void;
-  audio: ReactNode;
-}) {
-  const [reward, setReward] = useState<{ id: string; xp: number } | null>(null);
-  const n = state.level,
-    courseModule = getCourse(state.courseId).modules[n],
-    activity = courseModule.activities[state.step];
-  const done = isActivityComplete(state, activity.id),
-    available = activityAvailable(state, n, activity);
-  const completion = state.completedActivities[activity.id];
-  const advanceFocus = useRef(false);
-  useEffect(() => {
-    if (advanceFocus.current) {
-      document.querySelector<HTMLElement>('.learning-activity h1')?.focus();
-      advanceFocus.current = false;
-    }
-  }, [activity.id]);
-  const finish = () => {
-    const next = completeActivity(state, n, activity.id);
-    setReward({ id: activity.id, xp: score(next) - score(state) });
-    advanceFocus.current = activity.type === 'microLesson';
-    onChange((current) =>
-      activity.type === 'microLesson'
-        ? continueMicroLesson(current, n, activity.id)
-        : completeActivity(current, n, activity.id),
-    );
-  };
-  const nextIndex = Math.min(
-    courseModule.activities.length - 1,
-    state.step + 1,
-  );
-  return (
-    <article className="lesson-panel learning-experience">
-      <nav className="learning-phases" aria-label="Fasi del modulo">
-        {courseModule.phases.map((phase, i) => (
-          <button
-            key={phase.id}
-            aria-current={phase.id === activity.phase ? 'step' : undefined}
-            disabled={
-              !ready || !activityAvailable(state, n, phase.activities[0])
-            }
-            onClick={() =>
-              onNavigate(
-                n,
-                courseModule.activities.indexOf(
-                  phase.activities.find(
-                    (a) => !isActivityComplete(state, a.id),
-                  ) || phase.activities[0],
-                ),
-              )
-            }
-          >
-            <span>
-              {phaseComplete(state, n, phase.id) ? <Check size={16} /> : i + 1}
-            </span>
-            {phase.name}
-          </button>
-        ))}
-      </nav>
-      <LearningPhaseHeader state={state} moduleIndex={n} />
-      <div className="activity learning-activity">
-        <h1 tabIndex={-1}>{activity.title}</h1>
-        {activity.type !== 'microLesson' && activity.type !== 'unlock' && (
-          <p className="scenario">{activity.description}</p>
-        )}
-        {available ? (
-          <>
-            {activity.slide && (
-              <>
-                <div className="slide-steps">
-                  {activity.slide.steps.map((text, i) => (
-                    <LessonBlock key={text} number={i + 1} speaking={false}>
-                      {text}
-                    </LessonBlock>
-                  ))}
-                </div>
-                <InsightCard speaking={false}>
-                  {activity.slide.takeaway}
-                </InsightCard>
-                {audio}
-                <p className="micro-note">
-                  Selezionando Continua confermi di aver letto il concetto prima
-                  di continuare. Non basta aprire questa pagina.
-                </p>
-              </>
-            )}
-            {activity.interaction && (
-              <StructuredInteraction
-                activity={activity}
-                state={state}
-                onChange={onChange}
-              />
-            )}
-            {activity.type === 'exam' && (
-              <ExamMode
-                state={state}
-                onChange={onChange}
-                onReview={onNavigate}
-              />
-            )}
-            {(activity.type === 'textInput' ||
-              activity.type === 'scenario') && (
-              <ActivityText
-                activity={activity}
-                state={state}
-                onChange={onChange}
-              />
-            )}
-            {activity.question && (
-              <>
-                <RadioGroup
-                  className="prompt-options"
-                  value={
-                    state.answers[activity.id] === undefined
-                      ? ''
-                      : String(state.answers[activity.id])
-                  }
-                  onValueChange={(value) =>
-                    onChange((current) => ({
-                      ...current,
-                      answers: {
-                        ...current.answers,
-                        [activity.id]: Number(value),
-                      },
-                    }))
-                  }
-                  aria-label={`Scegli ${activity.questionLabel ? 'l’opzione' : 'il prompt'} più adatto`}
-                >
-                  {activity.question.options.map((text, i) => (
-                    <label
-                      key={text}
-                      className={`prompt-card ${state.answers[activity.id] === i ? 'chosen' : ''}`}
-                    >
-                      <div className="prompt-top">
-                        <strong>
-                          {activity.questionLabel?.toUpperCase() || 'PROMPT'}{' '}
-                          {String.fromCharCode(65 + i)}
-                        </strong>
-                        <RadioGroupItem value={String(i)} />
-                      </div>
-                      <p>{text}</p>
-                    </label>
-                  ))}
-                </RadioGroup>
-                {state.answers[activity.id] !== undefined && (
-                  <div
-                    className={`feedback ${state.answers[activity.id] === activity.question.correct ? 'success' : 'retry'}`}
-                    aria-live="polite"
-                  >
-                    <strong>
-                      {state.answers[activity.id] === activity.question.correct
-                        ? 'Scelta corretta: ecco perché'
-                        : 'Riconsidera la scelta'}
-                    </strong>
-                    <p>
-                      {state.answers[activity.id] === activity.question.correct
-                        ? activity.question.why
-                        : activity.question.hint}
-                    </p>
-                  </div>
-                )}
-              </>
-            )}
-            {activity.type === 'unlock' && (
-              <ModuleCompletion state={state} moduleIndex={n} />
-            )}
-          </>
-        ) : (
-          <p>
-            <Lock size={18} />
-            Completa le fasi precedenti per accedere.
-          </p>
-        )}
-        {done && (
-          <p className="activity-completed">
-            <Check size={16} />
-            {completion?.source === 'exemption'
-              ? 'Riconosciuta dal percorso precedente: nuova pratica non svolta.'
-              : 'Attività completata. Puoi ripassare senza duplicare gli XP.'}
-          </p>
-        )}
-        {done &&
-          activity.type !== 'unlock' &&
-          activity.type !== 'microLesson' && (
-            <AcademyButton
-              variant="ghost"
-              disabled={!canCompleteActivity(state, n, activity)}
-              onClick={finish}
-            >
-              Conferma il ripasso
-            </AcademyButton>
-          )}
-        <output className="xp-reward" aria-live="polite">
-          {reward?.id === activity.id
-            ? reward.xp > 0
-              ? `+${reward.xp} XP · ${activity.type === 'unlock' ? 'Modulo completato' : 'Attività completata'}`
-              : 'Ripasso confermato · XP già assegnati'
-            : ''}
-        </output>
-      </div>
-      <footer className="activity-footer">
-        <AcademyButton
-          variant="ghost"
-          disabled={!ready || state.step === 0}
-          onClick={() => onNavigate(n, state.step - 1)}
-        >
-          <ArrowLeft size={16} />
-          Indietro
-        </AcademyButton>
-        {!done && activity.type === 'exam' ? null : !done ? (
-          <AcademyButton
-            disabled={!ready || !canCompleteActivity(state, n, activity)}
-            onClick={finish}
-          >
-            {activity.type === 'microLesson'
-              ? 'Continua'
-              : activity.type === 'unlock'
-                ? 'Sblocca il risultato'
-                : activity.type === 'textInput'
-                  ? 'Conferma la pratica'
-                  : activity.phase === 'verify'
-                    ? 'Conferma la verifica'
-                    : 'Completa l’applicazione'}
-          </AcademyButton>
-        ) : activity.type !== 'unlock' ? (
-          <AcademyButton
-            onClick={
-              activity.type === 'microLesson'
-                ? finish
-                : () => onNavigate(n, nextIndex)
-            }
-          >
-            Continua
-            <ArrowRight size={18} />
-          </AcademyButton>
-        ) : n < getCourse(state.courseId).modules.length - 1 ? (
-          <AcademyButton onClick={() => onNavigate(n + 1)}>
-            Vai al Modulo {n + 2}
-            <ArrowRight size={18} />
-          </AcademyButton>
-        ) : (
-          <AcademyButton onClick={onCertificate}>
-            Prepara il tuo attestato
-            <ArrowRight size={18} />
-          </AcademyButton>
-        )}
-      </footer>
-      <nav className="step-nav" aria-label="Attività della fase">
-        {courseModule.activities
-          .filter((a) => a.phase === activity.phase)
-          .map((item, i) => (
-            <button
-              key={item.id}
-              disabled={!ready || !activityAvailable(state, n, item)}
-              aria-current={item.id === activity.id ? 'step' : undefined}
-              aria-label={`${PHASES.find((p) => p.id === activity.phase)!.name}, attività ${i + 1}`}
-              onClick={() =>
-                onNavigate(n, courseModule.activities.indexOf(item))
-              }
-            >
-              {isActivityComplete(state, item.id) ? <Check size={16} /> : i + 1}
-            </button>
-          ))}
-      </nav>
-      <details className="reference lesson-reference">
-        <summary>{getCourse(state.courseId).reference.title}</summary>
-        <p>{getCourse(state.courseId).reference.text}</p>
-        {getCourse(state.courseId).sources?.map((source) => (
-          <p key={source.url}>
-            <a href={source.url} target="_blank" rel="noreferrer">
-              {source.title}
-            </a>
-          </p>
-        ))}
-      </details>
-    </article>
   );
 }
